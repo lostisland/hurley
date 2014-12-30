@@ -9,6 +9,7 @@ HTTP adapters.  It is an evolution of Faraday, with rethought internals.
 client = Hurley::Client.new "https://api.github.com"
 client.user_agent = "hurley v0.1"
 client.header["blah"] = "is set on every request"
+client.query["a"] = "?a is set on every request too"
 
 client.adapter = Hurley::TestAdapter.new
 
@@ -18,7 +19,7 @@ client.on_redirect do |req, via|
 end
 
 req = client.build :get, "/users/tater"
-req.params["a"] = 1
+req.query["a"] = 1
 
 # follows up to 10 redirects
 res = req.run
