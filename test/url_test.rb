@@ -87,7 +87,7 @@ module Hurley
         assert !u.parent_of?(Url.parse(input)),
           "#{u.to_s.inspect} is parent of #{input.inspect}"
 
-        assert_equal input, Url.join(nil, input).to_s
+        assert_equal input, Url.join(u, input).to_s
       end
     end
 

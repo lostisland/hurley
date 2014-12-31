@@ -35,9 +35,9 @@ module Hurley
       when :diff  then return relative
       when :empty then return absolute
       when :extended
-        relative.send(:update_from, absolute)
+        relative.merge(absolute)
       when :relative
-        relative.send(:update_from, absolute)
+        relative.merge(absolute)
         relative.path = "#{absolute.path}/#{relative.path}"
       else
         raise "Invalid relation #{relation.inspect} between #{absolute.to_s.inspect} and #{relative.to_s.inspect}"
@@ -69,6 +69,19 @@ module Hurley
       return relation_with(url) != :diff
     end
 
+    def merge(url)
+      @parsed.scheme = url.scheme
+      @parsed.host = url.host
+      query.merge(url.query)
+
+      new_port = url.port
+      if INFERRED_PORTS[@parsed.scheme] == new_port
+        @parsed.port = nil
+      else
+        @parsed.port = new_port
+      end
+    end
+
     def to_s
       if (q = query.encode).empty?
         @parsed.query = nil
@@ -96,19 +109,6 @@ module Hurley
     end
 
     private
-
-    def update_from(absolute)
-      @parsed.scheme = absolute.scheme
-      @parsed.host = absolute.host
-      query.merge(absolute.query)
-
-      new_port = absolute.port
-      if INFERRED_PORTS[@parsed.scheme] == new_port
-        @parsed.port = nil
-      else
-        @parsed.port = new_port
-      end
-    end
 
     def relation_with(url)
       return :diff if url.scheme && url.scheme != scheme
