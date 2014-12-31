@@ -8,7 +8,7 @@ module Hurley
 
     def initialize(endpoint)
       @url = Url.parse(endpoint)
-      @header = Header.new
+      @header = Header.new :user_agent => Hurley::USER_AGENT
       @connection = nil
     end
 

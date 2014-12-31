@@ -6,6 +6,7 @@ module Hurley
       conn = Test.new
       conn.get "https://example.com/a/b" do |req|
         assert_equal "https://example.com/a/b?first=f&a=1&b=2", req.url.to_s
+        assert_equal Hurley::USER_AGENT, req.header[:user_agent]
         assert_equal "1", req.header["Global"]
         assert_equal "2!", req.header["Override"]
         assert_equal "3", req.header["Custom"]
