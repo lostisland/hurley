@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+# Usage: script/test [file] [adapter]... -- [test/unit options]
+# Runs the test suite against a local server spawned automatically in a
+# thread. After tests are done, the server is shut down.
+#
+# If filename arguments are given, only those files are run. If arguments given
+# are not filenames, they are taken as words that filter the list of files to run.
+#
+# Examples:
+#
+#   $ script/test
+#   $ script/test test/env_test.rb
+#   $ script/test excon typhoeus
+#
+#   # Run only tests matching /ssl/ for the net_http adapter, with SSL enabled.
+#   $ SSL=yes script/test net_http -- -n /ssl/
+#
+#   # Run against multiple rbenv versions
+#   $ RBENV_VERSIONS="1.9.3-p194 ree-1.8.7-2012.02" script/test
+set -e
+
+find_test_files() {
+  find "$1" -name '*_test.rb'
+}
+
+filter_matching() {
+  pattern="$1"
+  shift
+  for line in "$@"; do
+    [[ $line == *"$pattern"* ]] && echo "$line"
+  done
+}
+
+filtered=
+IFS=$'\n' test_files=($(find_test_files "test"))
+declare -a explicit_files
+
+# Process filter arguments:
+# - test filenames as taken as-is
+# - other words are taken as pattern to match the list of known files against
+# - arguments after "--" are forwarded to the ruby process
+while [ $# -gt 0 ]; do
+  arg="$1"
+  shift
+  if [ "$arg" = "--" ]; then
+    break
+  elif [ -f "$arg" ]; then
+    filtered=true
+    explicit_files[${#explicit_files[@]}+1]="$arg"
+  else
+    filtered=true
+    IFS=$'\n' explicit_files=(
+      ${explicit_files[@]}
+      $(filter_matching "$arg" "${test_files[@]}" || true)
+    )
+  fi
+done
+
+# If there were filter args, replace test files list with the results
+if [ -n "$filtered" ]; then
+  if [ ${#explicit_files[@]} -eq 0 ]; then
+    echo "Error: no test files match" >&2
+    exit 1
+  else
+    test_files=(${explicit_files[@]})
+    echo running "${test_files[@]}"
+  fi
+fi
+
+warnings="${TMPDIR:-/tmp}/faraday-warnings.$$"
+
+run_test_files() {
+  # Save warnings on stderr to a separate file
+  RUBYOPT="$RUBYOPT -w" ruby -e 'while f=ARGV.shift and f!="--"; load f; end' "${test_files[@]}" -- "$@" \
+    2> >(tee >(grep 'warning:' >"$warnings") | grep -v 'warning:')
+}
+
+check_warnings() {
+  # Display Ruby warnings from this project's source files. Abort if any were found.
+  num="$(grep -F "$PWD" "$warnings" | grep -v "${PWD}/bundle" | sort | uniq -c | sort -rn | tee /dev/stderr | wc -l)"
+  rm -f "$warnings"
+  if [ "$num" -gt 0 ]; then
+    echo "FAILED: this test suite doesn't tolerate Ruby syntax warnings!" >&2
+    exit 1
+  fi
+}
+
+if [ -n "$RBENV_VERSIONS" ]; then
+  IFS=' ' versions=($RBENV_VERSIONS)
+  for version in "${versions[@]}"; do
+    echo "[${version}]"
+    RBENV_VERSION="$version" run_test_files "$@"
+  done
+else
+  run_test_files "$@"
+fi
+
+check_warnings

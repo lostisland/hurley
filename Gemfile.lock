@@ -1,0 +1,15 @@
+PATH
+  remote: .
+  specs:
+    hurley (0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  bundler (~> 1.0)
+  hurley!
