@@ -4,8 +4,6 @@ require "forwardable"
 
 module Hurley
   class Url
-    extend Forwardable
-
     def self.escape_path(path)
       ERB::Util.url_encode(path.to_s)
     end
@@ -46,6 +44,7 @@ module Hurley
       relative
     end
 
+    extend Forwardable
     def_delegators(:@parsed,
       :scheme, :scheme=,
       :host, :host=,
