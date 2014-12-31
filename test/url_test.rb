@@ -47,6 +47,8 @@ module Hurley
       assert_equal 443, u.port
       assert_equal "/foo", u.path
       assert_equal "a=1", u.raw_query
+      assert_equal %w(a), u.query.keys
+      assert_equal "1", u.query["a"]
       assert_equal "https://example.com/foo?a=1", u.to_s
     end
 
@@ -57,12 +59,12 @@ module Hurley
         ""                                    => "https://example.com/foo?a=1",
         "bar"                                 => "https://example.com/foo/bar?a=1",
         "bar?a=1"                             => "https://example.com/foo/bar?a=1",
-        "bar?a=1&b=2"                         => "https://example.com/foo/bar?a=1",
-        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1",
-        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1",
-        "https://example.com/foo?b=2"         => "https://example.com/foo?a=1",
-        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1",
-        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1",
+        "bar?a=1&b=2"                         => "https://example.com/foo/bar?a=1&b=2",
+        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
+        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
+        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
+        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
+        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
       }.each do |input, expected|
         assert u.parent_of?(Url.parse(input)),
           "#{u.to_s.inspect} not parent of #{input.inspect}"
@@ -71,8 +73,12 @@ module Hurley
       end
 
       [
+        "?a=2",
+        "bar?a=2",
         "/",
+        "/foo?a=2",
         "/food",
+        "https://example.com/foo?a=2",
         "https://example.com/food",
         "http://example.com/foo?a=1",
         "https://example.com:9999/foo?a=1",

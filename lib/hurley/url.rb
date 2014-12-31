@@ -46,7 +46,7 @@ module Hurley
       relative
     end
 
-    def_delegators(:@parsed, :to_s,
+    def_delegators(:@parsed,
       :scheme, :scheme=,
       :host, :host=,
       :port, :port=,
@@ -61,16 +61,38 @@ module Hurley
       @parsed.path = new_path
     end
 
+    def query
+      @query ||= query_parser.call(@parsed.query)
+    end
+
+    def parent_of?(url)
+      return relation_with(url) != :diff
+    end
+
+    def to_s
+      if (q = query.encode).empty?
+        @parsed.query = nil
+      else
+        @parsed.query = q
+      end
+      @parsed.to_s
+    end
+
     def raw_query
       @parsed.query
     end
 
     def raw_query=(new_query)
+      @query = nil
       @parsed.query = new_query
     end
 
-    def parent_of?(url)
-      return relation_with(url) != :diff
+    def query_parser
+      @query_parser ||= Query.parser_for(nil)
+    end
+
+    def query_parser=(new_parser)
+      @query_parser = Query.parser_for(new_parser)
     end
 
     private
@@ -78,7 +100,7 @@ module Hurley
     def update_from(absolute)
       @parsed.scheme = absolute.scheme
       @parsed.host = absolute.host
-      @parsed.query = absolute.raw_query
+      query.merge(absolute.query)
 
       new_port = absolute.port
       if INFERRED_PORTS[@parsed.scheme] == new_port
@@ -94,8 +116,11 @@ module Hurley
       return :diff if url.port && url.port != port
       return :diff if path.empty?
 
-      url_path = url.path
+      query.each do |key, value|
+        return :diff unless !url.query.key?(key) || url.query[key] == value
+      end
 
+      url_path = url.path
       if url_path =~ EMPTY_OR_RELATIVE
         url_path.size.zero? ? :empty : :relative
       elsif url_path =~ parent_path_regex

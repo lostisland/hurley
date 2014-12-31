@@ -4,16 +4,20 @@ require "forwardable"
 module Hurley
   class Query
     def self.parser
-      @parser ||= PARSERS[:nested]
+      @parser ||= parser_for(nil)
     end
 
     def self.parser=(new_parser)
+      @parser = parser_for(new_parser)
+    end
+
+    def self.parser_for(new_parser)
       if new_parser.respond_to?(:call)
-        @parser = new_parser
+        new_parser
       elsif PARSERS.key?(new_parser)
-        @parser = PARSERS[new_parser]
+        PARSERS[new_parser]
       elsif new_parser.nil?
-        @parser = nil
+        PARSERS[:nested]
       else
         raise ArgumentError, "Hurley::Query parser should respond to #call(raw_query) or be one of #{PARSERS.keys.inspect}: #{new_parser.inspect}"
       end
@@ -30,11 +34,18 @@ module Hurley
     extend Forwardable
     def_delegators(:@hash,
       :[], :[]=,
+      :each,
       :keys,
       :size,
       :delete,
       :key?,
     )
+
+    def merge(absolute)
+      absolute.each do |key, value|
+        @hash[key] = value unless key?(key)
+      end
+    end
 
     def encode
       pairs = []
