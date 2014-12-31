@@ -8,7 +8,7 @@ module Hurley
 
     def initialize(endpoint)
       @url = Url.parse(endpoint)
-      @header = {}
+      @header = Header.new
       @connection = nil
     end
 

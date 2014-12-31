@@ -10,6 +10,7 @@ module Hurley
   end
 
   require_lib(
+    "header",
     "url",
     "query",
     "client",
