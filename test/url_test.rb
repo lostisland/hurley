@@ -12,6 +12,7 @@ module Hurley
         "a&b" => "a%26b",
         "a=b" => "a%3Db",
         "a;b" => "a%3Bb",
+        "a?b" => "a%3Fb",
       }.each do |input, expected|
         assert_equal expected, Url.escape_path(input)
       end
