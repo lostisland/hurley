@@ -39,7 +39,7 @@ module Hurley
     class Handler < Struct.new(:request, :callback)
       def call(request)
         @run = true
-        Hurley::Response.new(request, *callback.call(request))
+        Response.new(request, *callback.call(request))
       end
 
       def matches?(request)
@@ -53,7 +53,7 @@ module Hurley
     end
 
     def self.not_found(request)
-      Hurley::Response.new(request, 404, {}, "no test handler")
+      Response.new(request, 404, {}, "no test handler")
     end
   end
 end

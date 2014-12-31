@@ -19,7 +19,7 @@ module Hurley
       elsif new_parser.nil?
         PARSERS[:nested]
       else
-        raise ArgumentError, "Hurley::Query parser should respond to #call(raw_query) or be one of #{PARSERS.keys.inspect}: #{new_parser.inspect}"
+        raise ArgumentError, "#{name} parser should respond to #call(raw_query) or be one of #{PARSERS.keys.inspect}: #{new_parser.inspect}"
       end
     end
 
