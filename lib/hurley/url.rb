@@ -1,9 +1,16 @@
 require "uri"
+require "erb"
 require "forwardable"
 
 module Hurley
   class Url
     extend Forwardable
+
+    def self.escape_path(*paths)
+      paths.map do |path|
+        ERB::Util.url_encode(path.to_s)
+      end.join(SLASH)
+    end
 
     def self.parse(raw_url)
       case raw_url
@@ -98,6 +105,7 @@ module Hurley
       @parent_path_regex ||= %r{\A#{path}(/|\z)}
     end
 
+    SLASH = "/".freeze
     EMPTY_OR_RELATIVE = %r{\A([^/]|\z)}
     INFERRED_PORTS = {
       "https" => 443,
