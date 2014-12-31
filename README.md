@@ -11,9 +11,9 @@ client.user_agent = "hurley v0.1"
 client.header["blah"] = "is set on every request"
 client.query["a"] = "?a is set on every request too"
 
-client.adapter = Hurley::TestAdapter.new
+client.connection = Hurley::Test::Connection.new
 
-req = client.build :get, "/users/tater"
+req = client.request :get, "/users/tater"
 req.header["ABC"] = "DEF"
 req.query["a"] = 1 # overrides setting above
 

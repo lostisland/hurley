@@ -6,6 +6,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    minitest (5.5.0)
 
 PLATFORMS
   ruby
@@ -13,3 +14,4 @@ PLATFORMS
 DEPENDENCIES
   bundler (~> 1.0)
   hurley!
+  minitest (~> 5.5.0)

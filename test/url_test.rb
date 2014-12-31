@@ -1,0 +1,85 @@
+require File.expand_path("../helper", __FILE__)
+
+module Hurley
+  class UrlTest < TestCase
+    def test_parse_empty
+      u = Url.parse(nil)
+      assert_nil u.scheme
+      assert_nil u.host
+      assert_nil u.port
+      assert_equal "", u.path
+      assert_equal "", u.to_s
+    end
+
+    def test_parse_only_path
+      u = Url.parse("/foo")
+      assert_nil u.scheme
+      assert_nil u.host
+      assert_nil u.port
+      assert_equal "/foo", u.path
+      assert_equal "/foo", u.to_s
+    end
+
+    def test_parse_url
+      u = Url.parse("https://example.com/foo?a=1")
+      assert_equal "https", u.scheme
+      assert_equal "example.com", u.host
+      assert_equal 443, u.port
+      assert_equal "/foo", u.path
+      assert_equal "a=1", u.raw_query
+      assert_equal "https://example.com/foo?a=1", u.to_s
+    end
+
+    def test_joining_with_full_url
+      u = Url.parse("https://example.com/foo?a=1")
+
+      {
+        ""                                    => "https://example.com/foo?a=1",
+        "bar"                                 => "https://example.com/foo/bar?a=1",
+        "bar?a=1"                             => "https://example.com/foo/bar?a=1",
+        "bar?a=1&b=2"                         => "https://example.com/foo/bar?a=1",
+        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1",
+        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1",
+        "https://example.com/foo?b=2"         => "https://example.com/foo?a=1",
+        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1",
+        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1",
+      }.each do |input, expected|
+        assert u.parent_of?(Url.parse(input)),
+          "#{u.to_s.inspect} not parent of #{input.inspect}"
+
+        assert_equal expected, Url.join(u, input).to_s
+      end
+
+      [
+        "/",
+        "/food",
+        "https://example.com/food",
+        "http://example.com/foo?a=1",
+        "https://example.com:9999/foo?a=1",
+        "https://example2.com/foo?a=1",
+      ].each do |input|
+        assert !u.parent_of?(Url.parse(input)),
+          "#{u.to_s.inspect} is parent of #{input.inspect}"
+
+        assert_equal input, Url.join(nil, input).to_s
+      end
+    end
+
+    def test_joining_with_empty_url
+      u = Url.parse(nil)
+
+      [
+        "",
+        "/",
+        "/foo?a=1",
+        "https://example.com/foo",
+        "https://example.com/foo?a=1",
+      ].each do |input|
+        assert !u.parent_of?(Url.parse(input)),
+          "#{u.to_s.inspect} is parent of #{input.inspect}"
+
+        assert_equal input, Url.join(nil, input).to_s
+      end
+    end
+  end
+end
