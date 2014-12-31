@@ -6,9 +6,13 @@ module Hurley
   class Url
     extend Forwardable
 
-    def self.escape_path(*paths)
+    def self.escape_path(path)
+      ERB::Util.url_encode(path.to_s)
+    end
+
+    def self.escape_paths(*paths)
       paths.map do |path|
-        ERB::Util.url_encode(path.to_s)
+        escape_path(path)
       end.join(SLASH)
     end
 

@@ -12,10 +12,13 @@ module Hurley
         "a&b" => "a%26b",
         "a=b" => "a%3Db",
         "a;b" => "a%3Bb",
-        ["a", "b"] => "a/b"
       }.each do |input, expected|
-        assert_equal expected, Url.escape_path(*Array(input))
+        assert_equal expected, Url.escape_path(input)
       end
+    end
+
+    def test_escape_paths
+      assert_equal "a%20%2B%201/b%3B1", Url.escape_paths("a + 1", "b;1")
     end
 
     def test_parse_empty
