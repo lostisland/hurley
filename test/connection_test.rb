@@ -3,7 +3,7 @@ require File.expand_path("../helper", __FILE__)
 module Hurley
   class ConnectionTest < TestCase
     def test_get_full_url
-      conn = Test::Connection.new
+      conn = Test.new
       conn.get "https://example.com/a/b" do |req|
         assert_equal "https://example.com/a/b?first=f&a=1&b=2", req.url.to_s
         assert_equal "1", req.header["Global"]

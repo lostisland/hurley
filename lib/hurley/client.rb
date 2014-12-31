@@ -39,6 +39,10 @@ module Hurley
 
   class Request < Struct.new(:client, :verb, :url, :header)
     def call
+      if !client.respond_to?(:call)
+        raise ArgumentError, "The client is invalid: #{client.inspect}"
+      end
+
       client.call(self)
     end
   end
