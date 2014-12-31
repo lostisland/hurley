@@ -13,27 +13,15 @@ client.query["a"] = "?a is set on every request too"
 
 client.adapter = Hurley::TestAdapter.new
 
-client.on_request do |req|
-  req.header["Authorization"] ||= "abc"
+req = client.build :get, "/users/tater"
+req.header["ABC"] = "DEF"
+req.query["a"] = 1 # overrides setting above
+
+# this yields streaming body
+# but leaves response.body nil
+req.on_data do |chunk|
+  puts chunk
 end
 
-client.on_response do |res|
-  res.body = JSON.parse(res.body) if res.header["Content-Type"] == "application/json"
-end
-
-# like CheckRedirect http://golang.org/pkg/net/http/#Client
-client.on_redirect do |req, via|
-  req.run if via.size <= 10
-end
-
-res = client.get "/users/tater" do |req|
-  req.header["ABC"] = "DEF"
-  req.query["a"] = 1 # overrides setting above
-
-  # this yields streaming body
-  # but leaves response.body nil
-  req.on_data do |chunk|
-    puts chunk
-  end
-end
+res = req.run
 ```
