@@ -11,7 +11,7 @@ client.user_agent = "hurley v0.1"
 client.header["blah"] = "is set on every request"
 client.query["a"] = "?a is set on every request too"
 
-client.connection = Hurley::Test::Connection.new
+client.connection = Hurley::Test.new
 
 req = client.request :get, "/users/tater"
 req.header["ABC"] = "DEF"
