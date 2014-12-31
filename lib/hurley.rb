@@ -11,5 +11,6 @@ module Hurley
 
   require_lib(
     "url",
+    "query",
   )
 end
