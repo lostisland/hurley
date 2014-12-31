@@ -19,8 +19,8 @@ req.query["a"] = 1 # overrides setting above
 
 # this yields streaming body
 # but leaves response.body nil
-req.on_data do |chunk|
-  puts chunk
+req.on_data do |res, chunk|
+  puts "#{res.status_code}: #{chunk}"
 end
 
 res = req.run
