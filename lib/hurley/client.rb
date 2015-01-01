@@ -58,16 +58,40 @@ module Hurley
         StringIO.new(body)
       end
     end
+
+    def on_body
+      if block_given?
+        @body_receiver = Proc.new
+      else
+        @body_receiver ||= BodyReceiver.new
+      end
+    end
   end
 
   class Response < Struct.new(:request, :status_code, :header, :body)
     def receive_body(chunk)
-      (@chunks ||= []) << chunk
+      request.on_body.call(chunk)
     end
 
     def finish
-      self.body = @chunks.join if @chunks
+      if request.on_body.respond_to?(:join)
+        self.body = request.on_body.join
+      end
       self
+    end
+  end
+
+  class BodyReceiver
+    def initialize
+      @chunks = []
+    end
+
+    def call(chunk)
+      @chunks << chunk
+    end
+
+    def join
+      @chunks.join
     end
   end
 end

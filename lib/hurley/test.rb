@@ -39,7 +39,9 @@ module Hurley
         @run = true
         status, header, body = callback.call(request)
         res = Response.new(request, status, Header.new(header))
-        res.receive_body(body)
+        Array(body).each do |chunk|
+          res.receive_body(chunk)
+        end
         res.finish
       end
 

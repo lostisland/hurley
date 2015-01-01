@@ -155,5 +155,63 @@ module Hurley
 
       assert_equal 404, c.request!(:get, "b?first=f").status_code
     end
+
+    def test_get_url_with_custom_on_body
+      conn = Test.new
+      conn.get "/stream" do |req|
+        [200, {}, "stream"]
+      end
+
+      c = Client.new "https://example.com"
+      c.connection = conn
+
+      req = c.request(:get, "stream")
+      chunks = []
+
+      req.on_body do |chunk|
+        chunks << chunk
+      end
+
+      res = req.call
+      assert_equal 200, res.status_code
+      assert_nil res.body
+      assert_equal %w(stream), chunks
+    end
+
+    def test_get_url_with_streaming_response
+      conn = Test.new
+      conn.get "/stream" do |req|
+        [200, {}, %w(st r ea m!)]
+      end
+
+      c = Client.new "https://example.com"
+      c.connection = conn
+
+      res = c.request!(:get, "stream")
+      assert_equal 200, res.status_code
+      assert_equal "stream!", res.body
+    end
+
+    def test_get_url_with_streaming_response_and_custom_on_body
+      conn = Test.new
+      conn.get "/stream" do |req|
+        [200, {}, %w(st r ea m!)]
+      end
+
+      c = Client.new "https://example.com"
+      c.connection = conn
+
+      req = c.request(:get, "stream")
+      chunks = []
+
+      req.on_body do |chunk|
+        chunks << chunk
+      end
+
+      res = req.call
+      assert_equal 200, res.status_code
+      assert_nil res.body
+      assert_equal %w(st r ea m!), chunks
+    end
   end
 end
