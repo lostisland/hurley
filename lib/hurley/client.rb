@@ -34,7 +34,13 @@ module Hurley
     end
 
     def request(method, path)
-      Request.new(self, method, Url.join(@url, path), @header.dup)
+      req = Request.new(self, method, Url.join(@url, path), @header.dup)
+      if block_given?
+        yield req
+        req.call
+      else
+        req
+      end
     end
 
     def request!(*args)

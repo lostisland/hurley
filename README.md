@@ -23,6 +23,7 @@ end
 # change the http connection adapter
 client.connection = Hurley::Test.new
 
+# Build a request
 req = client.request :get, "/users/tater"
 req.header["ABC"] = "DEF"
 req.query["a"] = 1 # overrides setting above
@@ -39,7 +40,16 @@ req.on_body(200, 201) do |res, chunk|
   puts "#{res.status_code}: #{chunk}"
 end
 
+# Request#call makes the request and returns a Response.
 res = req.call
+
+# You can also use the block form:
+res = client.request :get, "/users/tater" do |req|
+  req.header["Authorization"] = "Token mytoken"
+end
+
+# Finally, you can use Client#request! as a shortcut too.
+res = client.request! :get, "/users/tater"
 ```
 
 ## TODO

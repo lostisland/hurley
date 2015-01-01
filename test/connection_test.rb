@@ -223,14 +223,13 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = conn
 
-      req = c.request(:get, "stream")
       chunks = []
-
-      req.on_body 201, 200 do |res, chunk|
-        chunks << chunk
+      res = c.request(:get, "stream") do |req|
+        req.on_body 201, 200 do |res, chunk|
+          chunks << chunk
+        end
       end
 
-      res = req.call
       assert_equal 200, res.status_code
       assert_nil res.body
       assert_equal %w(st r ea m!), chunks
