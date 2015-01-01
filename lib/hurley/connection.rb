@@ -47,13 +47,7 @@ module Hurley
         request.url.request_uri,  # request uri path
         request.header,           # request headers
       )
-
-      if request.body.respond_to?(:read)
-        http_req.body_stream = request.body
-      else
-        http_req.body = request.body
-      end
-
+      http_req.body_stream = request.body_io
       http_req
     end
 

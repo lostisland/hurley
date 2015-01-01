@@ -1,4 +1,5 @@
 require "forwardable"
+require "stringio"
 
 module Hurley
   class Client
@@ -48,6 +49,14 @@ module Hurley
       end
 
       client.call(self)
+    end
+
+    def body_io
+      if body.respond_to?(:read)
+        body
+      else
+        StringIO.new(body)
+      end
     end
   end
 
