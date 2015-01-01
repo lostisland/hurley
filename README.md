@@ -16,10 +16,16 @@ req = client.request :get, "/users/tater"
 req.header["ABC"] = "DEF"
 req.query["a"] = 1 # overrides setting above
 
-# this yields streaming body
-# but leaves response.body nil
-req.on_body do |chunk|
-  puts "#{chunk}"
+# this is called with the response and received bytes from the response
+# leaves response.body nil
+req.on_body do |res, chunk|
+  puts "#{res.status_code}: #{chunk}"
+end
+
+# this is called with the response and received bytes, but only if the status is
+# 200 or 201
+req.on_body(200, 201) do |res, chunk|
+  puts "#{res.status_code}: #{chunk}"
 end
 
 res = req.run

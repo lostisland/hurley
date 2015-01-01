@@ -168,7 +168,7 @@ module Hurley
       req = c.request(:get, "stream")
       chunks = []
 
-      req.on_body do |chunk|
+      req.on_body do |res, chunk|
         chunks << chunk
       end
 
@@ -204,7 +204,7 @@ module Hurley
       req = c.request(:get, "stream")
       chunks = []
 
-      req.on_body do |chunk|
+      req.on_body do |res, chunk|
         chunks << chunk
       end
 
@@ -212,6 +212,50 @@ module Hurley
       assert_equal 200, res.status_code
       assert_nil res.body
       assert_equal %w(st r ea m!), chunks
+    end
+
+    def test_get_url_with_streaming_response_with_correct_status
+      conn = Test.new
+      conn.get "/stream" do |req|
+        [200, {}, %w(st r ea m!)]
+      end
+
+      c = Client.new "https://example.com"
+      c.connection = conn
+
+      req = c.request(:get, "stream")
+      chunks = []
+
+      req.on_body 201, 200 do |res, chunk|
+        chunks << chunk
+      end
+
+      res = req.call
+      assert_equal 200, res.status_code
+      assert_nil res.body
+      assert_equal %w(st r ea m!), chunks
+    end
+
+    def test_get_url_with_streaming_response_with_wrong_status
+      conn = Test.new
+      conn.get "/stream" do |req|
+        [200, {}, %w(st r ea m!)]
+      end
+
+      c = Client.new "https://example.com"
+      c.connection = conn
+
+      req = c.request(:get, "stream")
+      chunks = []
+
+      req.on_body 201 do |res, chunk|
+        chunks << chunk
+      end
+
+      res = req.call
+      assert_equal 200, res.status_code
+      assert_equal "stream!", res.body
+      assert_equal [], chunks
     end
   end
 end

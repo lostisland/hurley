@@ -63,12 +63,8 @@ module Hurley
       end
     end
 
-    def on_body
-      if block_given?
-        @body_receiver = Proc.new
-      else
-        @body_receiver ||= BodyReceiver.new
-      end
+    def on_body(*statuses)
+      @body_receiver = [statuses.empty? ? nil : statuses, Proc.new]
     end
 
     def inspect
@@ -77,6 +73,10 @@ module Hurley
         verb.to_s.upcase,
         url.to_s,
       ]
+    end
+
+    def body_receiver
+      @body_receiver ||= [nil, BodyReceiver.new]
     end
   end
 
@@ -91,14 +91,23 @@ module Hurley
       @status_code = status_code
       @header = header || Header.new
       @body = nil
+      @receiver = nil
       yield self
-      if request.on_body.respond_to?(:join)
-        @body = request.on_body.join
+      if @receiver.respond_to?(:join)
+        @body = @receiver.join
       end
     end
 
     def receive_body(chunk)
-      request.on_body.call(chunk)
+      if @receiver.nil?
+        statuses, receiver = request.body_receiver
+        @receiver = if statuses && !statuses.include?(@status_code)
+          BodyReceiver.new
+        else
+          receiver
+        end
+      end
+      @receiver.call(self, chunk)
     end
 
     def inspect
@@ -117,7 +126,7 @@ module Hurley
       @chunks = []
     end
 
-    def call(chunk)
+    def call(res, chunk)
       @chunks << chunk
     end
 
