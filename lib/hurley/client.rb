@@ -6,6 +6,13 @@ module Hurley
     attr_reader :header
     attr_accessor :connection
 
+    def self.default_connection
+      @default_connection ||= begin
+        Hurley.require_lib "connection"
+        Connection.new
+      end
+    end
+
     def initialize(endpoint)
       @url = Url.parse(endpoint)
       @header = Header.new :user_agent => Hurley::USER_AGENT
@@ -21,10 +28,7 @@ module Hurley
     )
 
     def call(request)
-      if !@connection.respond_to?(:call)
-        raise ArgumentError, "The client connection is invalid: #{@connection.inspect}"
-      end
-
+      @connection ||= self.class.default_connection
       @connection.call(request)
     end
 
@@ -37,7 +41,7 @@ module Hurley
     end
   end
 
-  class Request < Struct.new(:client, :verb, :url, :header)
+  class Request < Struct.new(:client, :verb, :url, :header, :body)
     def call
       if !client.respond_to?(:call)
         raise ArgumentError, "The client is invalid: #{client.inspect}"

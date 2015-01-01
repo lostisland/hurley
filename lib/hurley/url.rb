@@ -81,6 +81,14 @@ module Hurley
       end
     end
 
+    def request_uri
+      if (q = query.encode).empty?
+        path
+      else
+        "#{path}?#{q}"
+      end
+    end
+
     def to_s
       if (q = query.encode).empty?
         @parsed.query = nil

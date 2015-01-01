@@ -40,6 +40,10 @@ module Hurley
       self.class.new(@hash.dup)
     end
 
+    def to_hash
+      @hash
+    end
+
     def canonical(key)
       KEYS[key] || key.to_s
     end
