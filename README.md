@@ -41,3 +41,16 @@ end
 
 res = req.call
 ```
+
+## TODO
+
+* [ ] basic authentication
+* [ ] callbacks
+* [ ] live server tests
+* [ ] logging
+* [ ] multipart posts
+* [ ] redirections
+
+## NOT TODO
+
+* [ ] connection adapters with dependencies
