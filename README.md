@@ -7,7 +7,6 @@ HTTP adapters.  It is an evolution of Faraday, with rethought internals.
 
 ```ruby
 client = Hurley::Client.new "https://api.github.com"
-client.user_agent = "hurley v0.1"
 client.header["blah"] = "is set on every request"
 client.query["a"] = "?a is set on every request too"
 
@@ -19,8 +18,8 @@ req.query["a"] = 1 # overrides setting above
 
 # this yields streaming body
 # but leaves response.body nil
-req.on_data do |res, chunk|
-  puts "#{res.status_code}: #{chunk}"
+req.on_body do |chunk|
+  puts "#{chunk}"
 end
 
 res = req.run
