@@ -61,5 +61,13 @@ module Hurley
   end
 
   class Response < Struct.new(:request, :status_code, :header, :body)
+    def receive_body(chunk)
+      (@chunks ||= []) << chunk
+    end
+
+    def finish
+      self.body = @chunks.join if @chunks
+      self
+    end
   end
 end

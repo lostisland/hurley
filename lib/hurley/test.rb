@@ -38,7 +38,9 @@ module Hurley
       def call(request)
         @run = true
         status, header, body = callback.call(request)
-        Response.new(request, status, Header.new(header), body)
+        res = Response.new(request, status, Header.new(header))
+        res.receive_body(body)
+        res.finish
       end
 
       def matches?(request)

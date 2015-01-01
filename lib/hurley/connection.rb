@@ -9,9 +9,15 @@ require "zlib"
 module Hurley
   class Connection
     def call(request)
+      res = Response.new(request)
       net_http_connection(request) do |http|
         begin
-          http_res = perform_request(http, request)
+          http_res = perform_request(http, request, res)
+          res.status_code = http_res.code.to_i
+          res.header = Header.new
+          http_res.each_header do |key, value|
+            res.header[key] = value
+          end
         rescue *NET_HTTP_EXCEPTIONS => err
           if defined?(OpenSSL) && OpenSSL::SSL::SSLError === err
             raise SSLError, err
@@ -19,13 +25,9 @@ module Hurley
             raise ConnectionFailed, err
           end
         end
-
-        res = Response.new(request, http_res.code.to_i, Header.new, http_res.body)
-        http_res.each_header do |key, value|
-          res.header[key] = value
-        end
-        res
       end
+
+      res.finish
 
     rescue ::Timeout::Error => err
       raise Timeout, err
@@ -51,12 +53,17 @@ module Hurley
       http_req
     end
 
-    def perform_request(http, request)
+    def perform_request(http, request, res)
       if :get == request.verb
         # prefer `get` to `request` because the former handles gzip (ruby 1.9)
-        http.get(request.url.request_uri, request.header.to_hash)
+        http_res = http.get(request.url.request_uri, request.header.to_hash) do |chunk|
+          res.receive_body(chunk)
+        end
+        http_res
       else
-        http.request(net_http_request(request))
+        http_res = http.request(net_http_request(request))
+        res.receive_body(http_res.body)
+        http_res
       end
     end
 
