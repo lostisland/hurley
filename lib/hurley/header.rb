@@ -15,19 +15,19 @@ module Hurley
     )
 
     def [](key)
-      @hash[canonical(key)]
+      @hash[self.class.canonical(key)]
     end
 
     def []=(key, value)
-      @hash[canonical(key)] = value.to_s
+      @hash[self.class.canonical(key)] = value.to_s
     end
 
     def key?(key)
-      @hash.key?(canonical(key))
+      @hash.key?(self.class.canonical(key))
     end
 
     def delete(key)
-      @hash.delete(canonical(key))
+      @hash.delete(self.class.canonical(key))
     end
 
     def merge(hash)
@@ -51,28 +51,46 @@ module Hurley
       ]
     end
 
-    def canonical(key)
-      KEYS[key] || key.to_s
-    end
-
     def self.canonical(key)
       KEYS[key] || key.to_s
     end
 
+    def self.add_canonical_key(*canonicals)
+      canonicals.each do |canonical|
+        KEYS[canonical] = canonical
+        shortcut = canonical.downcase
+        KEYS[shortcut] = canonical
+        shortcut.gsub!("-", "_")
+        KEYS[shortcut] = canonical
+        KEYS[shortcut.to_sym] = canonical
+      end
+    end
+
     # hash of "shortcut key" => "canonical header key"
     KEYS = {}
-    [
+    add_canonical_key(
       "Accept",
-      "Content-Type",
+      "Access-Control-Allow-Credentials",
+      "Access-Control-Allow-Origin",
+      "Acces-Control-Expose-Headers",
+      "Cache-Control",
+      "Connection",
       "Content-Length",
+      "Content-Security-Policy",
+      "Content-Type",
+      "Date",
+      "Etag",
+      "Last-Modified",
+      "Server",
+      "Status",
+      "String-Transport-Security",
+      "Transfer-Encoding",
       "User-Agent",
-    ].each do |canonical|
-      KEYS[canonical] = canonical
-      shortcut = canonical.downcase
-      KEYS[shortcut] = canonical
-      shortcut.gsub!("-", "_")
-      KEYS[shortcut] = canonical
-      KEYS[shortcut.to_sym] = canonical
-    end
+      "Vary",
+      "X-Content-Type-Options",
+      "X-Frame-Options",
+      "X-Served-By",
+      "X-Xss-Protection",
+    )
   end
 end
