@@ -10,12 +10,10 @@ client = Hurley::Client.new "https://api.github.com"
 client.header["blah"] = "is set on every request"
 client.query["a"] = "?a is set on every request too"
 
-# not implemented
 client.before_call do |req|
   # modify request before it's called
 end
 
-# not implemented
 client.after_call do |res|
   # modify response after it's called
 end

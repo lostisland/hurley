@@ -2,6 +2,7 @@ module Hurley
   class Test
     def initialize
       @handlers = []
+      yield self if block_given?
     end
 
     def head(url)

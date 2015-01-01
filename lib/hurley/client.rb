@@ -15,6 +15,8 @@ module Hurley
     end
 
     def initialize(endpoint)
+      @before_callbacks = []
+      @after_callbacks = []
       @url = Url.parse(endpoint)
       @header = Header.new :user_agent => Hurley::USER_AGENT
       @connection = nil
@@ -27,8 +29,6 @@ module Hurley
       :host, :host=,
       :port, :port=,
     )
-
-    def_delegators(:connection, :call)
 
     def connection
       @connection ||= self.class.default_connection
@@ -70,6 +70,36 @@ module Hurley
       call(req)
     end
 
+    def call(request)
+      @before_callbacks.each do |_, cb|
+        cb.call(request)
+      end
+
+      response = connection.call(request)
+
+      @after_callbacks.each do |_, cb|
+        cb.call(response)
+      end
+
+      response
+    end
+
+    def before_call(name = nil)
+      if !block_given?
+        raise ArgumentError, "Define this callback with a block that accepts a request"
+      end
+
+      @before_callbacks << [name || :undefined, Proc.new]
+    end
+
+    def after_call(name = nil)
+      if !block_given?
+        raise ArgumentError, "Define this callback with a block that accepts a response"
+      end
+
+      @after_callbacks << [name || :undefined, Proc.new]
+    end
+
     def request(method, path)
       Request.new(method, Url.join(@url, path), @header.dup)
     end
@@ -108,7 +138,7 @@ module Hurley
   class Response
     attr_reader :request
     attr_reader :header
-    attr_reader :body
+    attr_accessor :body
     attr_accessor :status_code
 
     def initialize(request, status_code = nil, header = nil)
