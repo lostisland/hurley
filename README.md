@@ -10,6 +10,17 @@ client = Hurley::Client.new "https://api.github.com"
 client.header["blah"] = "is set on every request"
 client.query["a"] = "?a is set on every request too"
 
+# not implemented
+client.before_call do |req|
+  # modify request before it's called
+end
+
+# not implemented
+client.after_call do |res|
+  # modify response after it's called
+end
+
+# change the http connection adapter
 client.connection = Hurley::Test.new
 
 req = client.request :get, "/users/tater"
@@ -28,5 +39,5 @@ req.on_body(200, 201) do |res, chunk|
   puts "#{res.status_code}: #{chunk}"
 end
 
-res = req.run
+res = req.call
 ```
