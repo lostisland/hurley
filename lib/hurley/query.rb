@@ -74,6 +74,13 @@ module Hurley
       raise NotImplementedError
     end
 
+    def inspect
+      "#<%s %s>" % [
+        self.class.name,
+        @hash.inspect,
+      ]
+    end
+
     AMP = "&".freeze
     EQ = "=".freeze
     EMPTY_BRACKET = "[]".freeze

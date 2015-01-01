@@ -70,6 +70,14 @@ module Hurley
         @body_receiver ||= BodyReceiver.new
       end
     end
+
+    def inspect
+      "#<%s %s %s>" % [
+        self.class.name,
+        verb.to_s.upcase,
+        url.to_s,
+      ]
+    end
   end
 
   class Response
@@ -91,6 +99,16 @@ module Hurley
 
     def receive_body(chunk)
       request.on_body.call(chunk)
+    end
+
+    def inspect
+      "#<%s %s %s == %d%s>" % [
+        self.class.name,
+        @request.verb.to_s.upcase,
+        @request.url.to_s,
+        @status_code.to_i,
+        @body ? " (#{@body.bytesize} bytes)" : nil,
+      ]
     end
   end
 

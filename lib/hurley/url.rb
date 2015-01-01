@@ -134,6 +134,13 @@ module Hurley
       @query_parser = Query.parser_for(new_parser)
     end
 
+    def inspect
+      "#<%s %s>" % [
+        self.class.name,
+        to_s,
+      ]
+    end
+
     private
 
     def relation_with(url)

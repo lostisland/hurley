@@ -44,6 +44,13 @@ module Hurley
       @hash
     end
 
+    def inspect
+      "#<%s %s>" % [
+        self.class.name,
+        @hash.inspect,
+      ]
+    end
+
     def canonical(key)
       KEYS[key] || key.to_s
     end
