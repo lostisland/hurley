@@ -19,11 +19,12 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      req = c.request :get, "a/b?first=f"
-      req.header["Override"] = "2!"
-      req.header["Custom"] = "3"
-      req.url.query["b"] = 2
-      res = req.call
+      res = c.request :get, "a/b?first=f" do |req|
+        req.header["Override"] = "2!"
+        req.header["Custom"] = "3"
+        req.url.query["b"] = 2
+      end
+
       assert_equal 200, res.status_code
       assert_equal "text/plain", res.header["Content-Type"]
       assert_equal "ok", res.body
@@ -47,11 +48,12 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      req = c.request :get, "a/b?first=f"
-      req.header["Override"] = "2!"
-      req.header["Custom"] = "3"
-      req.url.query["b"] = 2
-      res = req.call
+      res = c.request :get, "a/b?first=f" do |req|
+        req.header["Override"] = "2!"
+        req.header["Custom"] = "3"
+        req.url.query["b"] = 2
+      end
+
       assert_equal 200, res.status_code
       assert_equal "text/plain", res.header["Content-Type"]
       assert_equal "ok", res.body
@@ -75,11 +77,12 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      req = c.request :get, "b?first=f"
-      req.header["Override"] = "2!"
-      req.header["Custom"] = "3"
-      req.url.query["b"] = 2
-      res = req.call
+      res = c.request :get, "b?first=f" do |req|
+        req.header["Override"] = "2!"
+        req.header["Custom"] = "3"
+        req.url.query["b"] = 2
+      end
+
       assert_equal 200, res.status_code
       assert_equal "text/plain", res.header["Content-Type"]
       assert_equal "ok", res.body
@@ -103,11 +106,12 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      req = c.request :get, "b?first=f"
-      req.header["Override"] = "2!"
-      req.header["Custom"] = "3"
-      req.url.query["b"] = 2
-      res = req.call
+      res = c.request :get, "b?first=f" do |req|
+        req.header["Override"] = "2!"
+        req.header["Custom"] = "3"
+        req.url.query["b"] = 2
+      end
+
       assert_equal 200, res.status_code
       assert_equal "text/plain", res.header["Content-Type"]
       assert_equal "ok", res.body
@@ -244,14 +248,13 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = conn
 
-      req = c.request(:get, "stream")
       chunks = []
-
-      req.on_body 201 do |res, chunk|
-        chunks << chunk
+      res = c.request(:get, "stream") do |req|
+        req.on_body 201 do |res, chunk|
+          chunks << chunk
+        end
       end
 
-      res = req.call
       assert_equal 200, res.status_code
       assert_equal "stream!", res.body
       assert_equal [], chunks
