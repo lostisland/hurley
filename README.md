@@ -40,16 +40,13 @@ req.on_body(200, 201) do |res, chunk|
   puts "#{res.status_code}: #{chunk}"
 end
 
-# Request#call makes the request and returns a Response.
-res = req.call
+# Client#call makes the request and returns a Response.
+res = client.call(req)
 
-# You can also use the block form:
-res = client.request :get, "/users/tater" do |req|
+# You can also use the block form shortcut
+res = client.get("/users/tater") do |req|
   req.header["Authorization"] = "Token mytoken"
 end
-
-# Finally, you can use Client#request! as a shortcut too.
-res = client.request! :get, "/users/tater"
 ```
 
 ## TODO

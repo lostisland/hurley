@@ -4,6 +4,10 @@ module Hurley
       @handlers = []
     end
 
+    def head(url)
+      handle(:head, url, &Proc.new)
+    end
+
     def get(url)
       handle(:get, url, &Proc.new)
     end
@@ -20,8 +24,12 @@ module Hurley
       handle(:delete, url, &Proc.new)
     end
 
+    def options(url)
+      handle(:options, url, &Proc.new)
+    end
+
     def handle(verb, url)
-      @handlers << Handler.new(Request.new(self, verb, Url.parse(url)), Proc.new)
+      @handlers << Handler.new(Request.new(verb, Url.parse(url)), Proc.new)
     end
 
     def call(request)

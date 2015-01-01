@@ -5,7 +5,7 @@ module Hurley
   class Client
     attr_reader :url
     attr_reader :header
-    attr_accessor :connection
+    attr_writer :connection
 
     def self.default_connection
       @default_connection ||= begin
@@ -28,37 +28,56 @@ module Hurley
       :port, :port=,
     )
 
-    def call(request)
+    def_delegators(:connection, :call)
+
+    def connection
       @connection ||= self.class.default_connection
-      @connection.call(request)
+    end
+
+    def head(path)
+      req = request(:head, path)
+      yield req if block_given?
+      call(req)
+    end
+
+    def get(path)
+      req = request(:get, path)
+      yield req if block_given?
+      call(req)
+    end
+
+    def put(path)
+      req = request(:put, path)
+      yield req if block_given?
+      call(req)
+    end
+
+    def post(path)
+      req = request(:post, path)
+      yield req if block_given?
+      call(req)
+    end
+
+    def delete(path)
+      req = request(:delete, path)
+      yield req if block_given?
+      call(req)
+    end
+
+    def options(path)
+      req = request(:options, path)
+      yield req if block_given?
+      call(req)
     end
 
     def request(method, path)
-      req = Request.new(self, method, Url.join(@url, path), @header.dup)
-      if block_given?
-        yield req
-        req.call
-      else
-        req
-      end
-    end
-
-    def request!(*args)
-      request(*args).call
+      Request.new(method, Url.join(@url, path), @header.dup)
     end
   end
 
-  class Request < Struct.new(:client, :verb, :url, :header, :body)
+  class Request < Struct.new(:verb, :url, :header, :body)
     def query
       url.query
-    end
-
-    def call
-      if !client.respond_to?(:call)
-        raise ArgumentError, "The client is invalid: #{client.inspect}"
-      end
-
-      client.call(self)
     end
 
     def body_io

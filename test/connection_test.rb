@@ -19,7 +19,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      res = c.request :get, "a/b?first=f" do |req|
+      res = c.get "a/b?first=f" do |req|
         req.header["Override"] = "2!"
         req.header["Custom"] = "3"
         req.url.query["b"] = 2
@@ -48,7 +48,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      res = c.request :get, "a/b?first=f" do |req|
+      res = c.get "a/b?first=f" do |req|
         req.header["Override"] = "2!"
         req.header["Custom"] = "3"
         req.url.query["b"] = 2
@@ -77,7 +77,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      res = c.request :get, "b?first=f" do |req|
+      res = c.get "b?first=f" do |req|
         req.header["Override"] = "2!"
         req.header["Custom"] = "3"
         req.url.query["b"] = 2
@@ -106,7 +106,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      res = c.request :get, "b?first=f" do |req|
+      res = c.get "b?first=f" do |req|
         req.header["Override"] = "2!"
         req.header["Custom"] = "3"
         req.url.query["b"] = 2
@@ -129,7 +129,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      assert_equal 404, c.request!(:get, "b?first=f").status_code
+      assert_equal 404, c.get("b?first=f").status_code
     end
 
     def test_get_url_with_path_and_different_handler_port
@@ -143,7 +143,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      assert_equal 404, c.request!(:get, "b?first=f").status_code
+      assert_equal 404, c.get("b?first=f").status_code
     end
 
     def test_get_url_with_path_and_different_handler_host
@@ -157,7 +157,7 @@ module Hurley
       c.header["Override"] = "2"
       c.connection = conn
 
-      assert_equal 404, c.request!(:get, "b?first=f").status_code
+      assert_equal 404, c.get("b?first=f").status_code
     end
 
     def test_get_url_with_custom_on_body
@@ -169,14 +169,13 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = conn
 
-      req = c.request(:get, "stream")
       chunks = []
-
-      req.on_body do |res, chunk|
-        chunks << chunk
+      res = c.get("stream") do |req|
+        req.on_body do |res, chunk|
+          chunks << chunk
+        end
       end
 
-      res = req.call
       assert_equal 200, res.status_code
       assert_nil res.body
       assert_equal %w(stream), chunks
@@ -191,7 +190,7 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = conn
 
-      res = c.request!(:get, "stream")
+      res = c.get("stream")
       assert_equal 200, res.status_code
       assert_equal "stream!", res.body
     end
@@ -205,14 +204,13 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = conn
 
-      req = c.request(:get, "stream")
       chunks = []
-
-      req.on_body do |res, chunk|
-        chunks << chunk
+      res = c.get("stream") do |req|
+        req.on_body do |res, chunk|
+          chunks << chunk
+        end
       end
 
-      res = req.call
       assert_equal 200, res.status_code
       assert_nil res.body
       assert_equal %w(st r ea m!), chunks
@@ -228,7 +226,7 @@ module Hurley
       c.connection = conn
 
       chunks = []
-      res = c.request(:get, "stream") do |req|
+      res = c.get("stream") do |req|
         req.on_body 201, 200 do |res, chunk|
           chunks << chunk
         end
@@ -249,7 +247,7 @@ module Hurley
       c.connection = conn
 
       chunks = []
-      res = c.request(:get, "stream") do |req|
+      res = c.get("stream") do |req|
         req.on_body 201 do |res, chunk|
           chunks << chunk
         end
