@@ -67,7 +67,9 @@ module Hurley
     end
 
     # hash of "shortcut key" => "canonical header key"
-    KEYS = {}
+    KEYS = {
+      "ETag" => "Etag",
+    }
 
     # just common headers, not an exhaustive list
     add_canonical_key(
