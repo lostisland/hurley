@@ -38,11 +38,11 @@ module Hurley
       def call(request)
         @run = true
         status, header, body = callback.call(request)
-        res = Response.new(request, status, Header.new(header))
-        Array(body).each do |chunk|
-          res.receive_body(chunk)
+        Response.new(request, status, Header.new(header)) do |res|
+          Array(body).each do |chunk|
+            res.receive_body(chunk)
+          end
         end
-        res.finish
       end
 
       def matches?(request)
@@ -63,7 +63,9 @@ module Hurley
     end
 
     def self.not_found(request)
-      Response.new(request, 404, Header.new, "no test handler")
+      Response.new(request, 404, Header.new) do |res|
+        res.receive_body("no test handler")
+      end
     end
   end
 end

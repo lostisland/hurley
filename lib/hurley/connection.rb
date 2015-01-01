@@ -9,14 +9,14 @@ require "zlib"
 module Hurley
   class Connection
     def call(request)
-      res = Response.new(request)
       net_http_connection(request) do |http|
         begin
-          http_res = perform_request(http, request, res)
-          res.status_code = http_res.code.to_i
-          res.header = Header.new
-          http_res.each_header do |key, value|
-            res.header[key] = value
+          Response.new(request) do |res|
+            http_res = perform_request(http, request, res)
+            res.status_code = http_res.code.to_i
+            http_res.each_header do |key, value|
+              res.header[key] = value
+            end
           end
         rescue *NET_HTTP_EXCEPTIONS => err
           if defined?(OpenSSL) && OpenSSL::SSL::SSLError === err
@@ -26,8 +26,6 @@ module Hurley
           end
         end
       end
-
-      res.finish
 
     rescue ::Timeout::Error => err
       raise Timeout, err
