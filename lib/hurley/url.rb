@@ -17,6 +17,7 @@ module Hurley
     def self.parse(raw_url)
       case raw_url
       when Url then raw_url
+      when nil, EMPTY then Empty.new
       else new(URI.parse(raw_url.to_s))
       end
     end
@@ -36,7 +37,8 @@ module Hurley
         relative.merge(absolute)
       when :relative
         relative.merge(absolute)
-        relative.path = "#{absolute.path}/#{relative.path}"
+        joiner = absolute.path =~ ENDING_SLASH ? nil : SLASH
+        relative.path = "#{absolute.path}#{joiner}#{relative.path}"
       else
         raise "Invalid relation #{relation.inspect} between #{absolute.to_s.inspect} and #{relative.to_s.inspect}"
       end
@@ -121,7 +123,6 @@ module Hurley
       return :diff if url.scheme && url.scheme != scheme
       return :diff if url.host && url.host != host
       return :diff if url.port && url.port != port
-      return :diff if path.empty?
 
       query.each do |key, value|
         return :diff unless !url.query.key?(key) || url.query[key] == value
@@ -130,7 +131,7 @@ module Hurley
       url_path = url.path
       if url_path =~ EMPTY_OR_RELATIVE
         url_path.size.zero? ? :empty : :relative
-      elsif url_path =~ parent_path_regex
+      elsif path =~ EMPTY_OR_SLASH || url_path =~ parent_path_regex
         :extended
       else
         :diff
@@ -141,11 +142,25 @@ module Hurley
       @parent_path_regex ||= %r{\A#{path}(/|\z)}
     end
 
+    EMPTY = "".freeze
     SLASH = "/".freeze
+    ENDING_SLASH = %r{/\z}
     EMPTY_OR_RELATIVE = %r{\A([^/]|\z)}
+    EMPTY_OR_SLASH = %r{\A/?\z}
     INFERRED_PORTS = {
       "https" => 443,
       "http" => 80,
     }.freeze
+
+    class Empty < self
+      def initialize
+        @parsed = URI.parse(EMPTY)
+        @query = Query.parser_for(nil).call(EMPTY)
+      end
+
+      def relation_with(url)
+        :diff
+      end
+    end
   end
 end

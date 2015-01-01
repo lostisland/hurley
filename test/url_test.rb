@@ -40,7 +40,31 @@ module Hurley
       assert_equal "/foo", u.to_s
     end
 
-    def test_parse_url
+    def test_parse_url_with_host
+      u = Url.parse("https://example.com?a=1")
+      assert_equal "https", u.scheme
+      assert_equal "example.com", u.host
+      assert_equal 443, u.port
+      assert_equal "", u.path
+      assert_equal "a=1", u.raw_query
+      assert_equal %w(a), u.query.keys
+      assert_equal "1", u.query["a"]
+      assert_equal "https://example.com?a=1", u.to_s
+    end
+
+    def test_parse_url_with_slash
+      u = Url.parse("https://example.com/?a=1")
+      assert_equal "https", u.scheme
+      assert_equal "example.com", u.host
+      assert_equal 443, u.port
+      assert_equal "/", u.path
+      assert_equal "a=1", u.raw_query
+      assert_equal %w(a), u.query.keys
+      assert_equal "1", u.query["a"]
+      assert_equal "https://example.com/?a=1", u.to_s
+    end
+
+    def test_parse_url_with_path
       u = Url.parse("https://example.com/foo?a=1")
       assert_equal "https", u.scheme
       assert_equal "example.com", u.host
@@ -52,7 +76,81 @@ module Hurley
       assert_equal "https://example.com/foo?a=1", u.to_s
     end
 
-    def test_joining_with_full_url
+    def test_joining_url_with_host
+      u = Url.parse("https://example.com?a=1")
+
+      {
+        ""                                    => "https://example.com?a=1",
+        "/"                                   => "https://example.com/?a=1",
+        "foo"                                 => "https://example.com/foo?a=1",
+        "foo?a=1"                             => "https://example.com/foo?a=1",
+        "foo?a=1&b=2"                         => "https://example.com/foo?a=1&b=2",
+        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
+        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
+        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
+        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
+        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
+      }.each do |input, expected|
+        assert u.parent_of?(Url.parse(input)),
+        "#{u.to_s.inspect} not parent of #{input.inspect}"
+
+        assert_equal expected, Url.join(u, input).to_s
+      end
+
+      [
+        "?a=2",
+        "bar?a=2",
+        "/foo?a=2",
+        "https://example.com/foo?a=2",
+        "http://example.com/foo?a=1",
+        "https://example.com:9999/foo?a=1",
+        "https://example2.com/foo?a=1",
+      ].each do |input|
+        assert !u.parent_of?(Url.parse(input)),
+        "#{u.to_s.inspect} is parent of #{input.inspect}"
+
+        assert_equal input, Url.join(u, input).to_s
+      end
+    end
+
+    def test_joining_url_with_slash
+      u = Url.parse("https://example.com/?a=1")
+
+      {
+        ""                                    => "https://example.com/?a=1",
+        "/"                                   => "https://example.com/?a=1",
+        "foo"                                 => "https://example.com/foo?a=1",
+        "foo?a=1"                             => "https://example.com/foo?a=1",
+        "foo?a=1&b=2"                         => "https://example.com/foo?a=1&b=2",
+        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
+        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
+        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
+        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
+        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
+      }.each do |input, expected|
+        assert u.parent_of?(Url.parse(input)),
+        "#{u.to_s.inspect} not parent of #{input.inspect}"
+
+        assert_equal expected, Url.join(u, input).to_s
+      end
+
+      [
+        "?a=2",
+        "bar?a=2",
+        "/foo?a=2",
+        "https://example.com/foo?a=2",
+        "http://example.com/foo?a=1",
+        "https://example.com:9999/foo?a=1",
+        "https://example2.com/foo?a=1",
+      ].each do |input|
+        assert !u.parent_of?(Url.parse(input)),
+        "#{u.to_s.inspect} is parent of #{input.inspect}"
+
+        assert_equal input, Url.join(u, input).to_s
+      end
+    end
+
+    def test_joining_url_with_path
       u = Url.parse("https://example.com/foo?a=1")
 
       {
@@ -91,7 +189,7 @@ module Hurley
       end
     end
 
-    def test_joining_with_empty_url
+    def test_joining_empty_url
       u = Url.parse(nil)
 
       [
