@@ -42,8 +42,15 @@ module Hurley
       end
 
       def matches?(request)
-        self.request.verb == request.verb &&
-          self.request.url.parent_of?(request.url)
+        return false unless self.request.verb == request.verb
+
+        handler_url = self.request.url
+        if handler_url.host.to_s.empty?
+          handler_url.path_parent_of?(request.url) &&
+            handler_url.query_parent_of?(request.url)
+        else
+          handler_url.parent_of?(request.url)
+        end
       end
 
       def run?

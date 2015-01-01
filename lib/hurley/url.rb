@@ -50,8 +50,12 @@ module Hurley
     def_delegators(:@parsed,
       :scheme, :scheme=,
       :host, :host=,
-      :port, :port=,
+      :port=,
     )
+
+    def port
+      @parsed.port || INFERRED_PORTS[@parsed.scheme]
+    end
 
     def path
       @parsed.path
@@ -68,6 +72,19 @@ module Hurley
 
     def parent_of?(url)
       return relation_with(url) != :diff
+    end
+
+    def query_parent_of?(url)
+      url_query = url.respond_to?(:query) ? url.query : url
+      query.each do |key, value|
+        return false unless !url_query.key?(key) || url_query[key] == value
+      end
+      true
+    end
+
+    def path_parent_of?(url)
+      url_path = url.respond_to?(:path) ? url.path : url.to_s
+      path_relation_with(url_path) != :diff
     end
 
     def merge(url)
@@ -123,12 +140,11 @@ module Hurley
       return :diff if url.scheme && url.scheme != scheme
       return :diff if url.host && url.host != host
       return :diff if url.port && url.port != port
+      return :diff unless query_parent_of?(url.query)
+      path_relation_with(url.path)
+    end
 
-      query.each do |key, value|
-        return :diff unless !url.query.key?(key) || url.query[key] == value
-      end
-
-      url_path = url.path
+    def path_relation_with(url_path)
       if url_path =~ EMPTY_OR_RELATIVE
         url_path.size.zero? ? :empty : :relative
       elsif path =~ EMPTY_OR_SLASH || url_path =~ parent_path_regex
