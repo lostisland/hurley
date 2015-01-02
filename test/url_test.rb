@@ -248,12 +248,26 @@ module Hurley
           "/c?v=2&a=1"    => "https://example.com/c?v=2&a=1",
           "/c/?v=2&a=1"   => "https://example.com/c/?v=2&a=1",
         },
+
+        "http://example.com" => {
+          ""                         => "http://example.com",
+          "/"                        => "http://example.com/",
+          "https://example.com"      => "https://example.com",
+          "https://example.com:8080" => "https://example.com:8080",
+        },
+
+        "http://example.com:8080" => {
+          ""                         => "http://example.com:8080",
+          "/"                        => "http://example.com:8080/",
+          "https://example.com"      => "https://example.com",
+          "https://example.com:8080" => "https://example.com:8080",
+        },
       }.each do |endpoint, tests|
         absolute = Url.parse(endpoint)
         tests.each do |input, expected|
           actual = Url.join(absolute, input).to_s
           if actual != expected
-            errors << "#{endpoint.inspect} + #{input.inspect} = #{actual.inspect}"
+            errors << "#{endpoint.inspect} + #{input.inspect} = #{actual.inspect}, not #{expected.inspect}"
           end
         end
       end

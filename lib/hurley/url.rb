@@ -68,9 +68,27 @@ module Hurley
     end
 
     def join(relative)
-      relative.scheme ||= scheme
-      relative.host ||= host
-      relative.port ||= port
+      has_host = false
+
+      if relative.scheme
+        has_host = true
+      else
+        relative.scheme = scheme
+      end
+
+      if relative.host
+        has_host = true
+      else
+        relative.host = host
+      end
+
+      inferred_port = INFERRED_PORTS[relative.scheme]
+      if !has_host && relative.port == inferred_port
+        relative.port = port == inferred_port ?
+          nil :
+          port
+      end
+
       relative.user ||= user
       relative.password ||= password
 
