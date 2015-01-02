@@ -1,3 +1,4 @@
+require "base64"
 require "erb"
 require "forwardable"
 require "set"
@@ -25,6 +26,15 @@ module Hurley
 
     def initialize(parsed)
       @parsed = parsed
+      if u = @parsed.user
+        @user = u
+        @parsed.user = nil
+      end
+
+      if p = @parsed.password
+        @password = p
+        @parsed.password = nil
+      end
     end
 
     def self.join(absolute, relative)
@@ -37,6 +47,9 @@ module Hurley
       :host, :host=,
       :port=,
     )
+
+    attr_accessor :user
+    attr_accessor :password
 
     def port
       @parsed.port || INFERRED_PORTS[@parsed.scheme]
@@ -58,6 +71,8 @@ module Hurley
       relative.scheme ||= scheme
       relative.host ||= host
       relative.port ||= port
+      relative.user ||= user
+      relative.password ||= password
 
       query.each do |key, value|
         relative.query[key] = value unless relative.query.key?(key)
@@ -103,6 +118,11 @@ module Hurley
     def raw_query=(new_query)
       @query = nil
       @parsed.query = new_query
+    end
+
+    def basic_auth
+      return unless @user || @password
+      "Basic #{Base64.encode64("#{@user}:#{@password}").rstrip}"
     end
 
     def query_parser

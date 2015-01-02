@@ -121,6 +121,22 @@ module Hurley
       end
     end
 
+    def test_integration_basic_auth
+      cli = Client.new "http://a:b@c.com/d"
+      cli.connection = Test.new do |t|
+        t.get "/d/e" do |req|
+          token = req.header[:authorization].split(" ").last
+          [200, {}, Base64.decode64(token)]
+        end
+      end
+
+      req = cli.request :get, "e"
+      res = cli.call req
+
+      assert_equal 200, res.status_code
+      assert_equal "a:b", res.body
+    end
+
     def test_join
       errors = []
 
@@ -274,6 +290,8 @@ module Hurley
       assert_nil u.port
       assert_equal "", u.path
       assert_equal "", u.to_s
+      assert_nil u.user
+      assert_nil u.password
     end
 
     def test_parse_only_path
@@ -283,6 +301,8 @@ module Hurley
       assert_nil u.port
       assert_equal "/foo", u.path
       assert_equal "/foo", u.to_s
+      assert_nil u.user
+      assert_nil u.password
     end
 
     def test_parse_url_with_host
@@ -294,6 +314,8 @@ module Hurley
       assert_equal "a=1", u.raw_query
       assert_equal %w(a), u.query.keys
       assert_equal "1", u.query["a"]
+      assert_nil u.user
+      assert_nil u.password
       assert_equal "https://example.com?a=1", u.to_s
     end
 
@@ -306,6 +328,8 @@ module Hurley
       assert_equal "a=1", u.raw_query
       assert_equal %w(a), u.query.keys
       assert_equal "1", u.query["a"]
+      assert_nil u.user
+      assert_nil u.password
       assert_equal "https://example.com/?a=1", u.to_s
     end
 
@@ -318,7 +342,34 @@ module Hurley
       assert_equal "a=1", u.raw_query
       assert_equal %w(a), u.query.keys
       assert_equal "1", u.query["a"]
+      assert_nil u.user
+      assert_nil u.password
       assert_equal "https://example.com/foo?a=1", u.to_s
+    end
+
+    def test_parse_url_with_auth
+      u = Url.parse("https://a:b@example.com")
+      assert_equal "https", u.scheme
+      assert_equal "example.com", u.host
+      assert_equal 443, u.port
+      assert_equal "", u.path
+      assert_equal "a", u.user
+      assert_equal "b", u.password
+      assert_equal "https://example.com", u.to_s
+    end
+
+    def test_join_auth_url_with_url
+      u = Url.join("http://a:b@c.com", "/path")
+      assert_equal "a", u.user
+      assert_equal "b", u.password
+      assert_equal "http://c.com/path", u.to_s
+    end
+
+    def test_join_url_with_auth_url
+      u = Url.join("http://c.com/path", "http://a:b@c.com")
+      assert_equal "a", u.user
+      assert_equal "b", u.password
+      assert_equal "http://c.com/path", u.to_s
     end
   end
 end

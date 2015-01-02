@@ -49,7 +49,6 @@ end
 
 ## TODO
 
-* [ ] basic authentication
 * [ ] live server tests
 * [ ] logging
 * [ ] multipart posts

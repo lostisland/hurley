@@ -74,8 +74,15 @@ module Hurley
 
     def call(request)
       @before_callbacks.each { |cb| cb.call(request) }
+
+      if value = !request.header[:authorization] && request.url.basic_auth
+        request.header[:authorization] = value
+      end
+
       response = connection.call(request)
+
       @after_callbacks.each { |cb| cb.call(response) }
+
       response
     end
 

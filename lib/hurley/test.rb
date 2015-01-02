@@ -36,6 +36,8 @@ module Hurley
     def call(request)
       handler = @handlers.detect { |h| h.matches?(request) } ||
         self.class.method(:not_found)
+      # Create a new url with fresh state from the url string
+      request.url = Url.parse(request.url.to_s)
       handler.call(request)
     end
 
