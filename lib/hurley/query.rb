@@ -54,6 +54,15 @@ module Hurley
       end
     end
 
+    def parse_query(raw_query)
+      raw_query.to_s.split(AMP).each do |pair|
+        escaped_key, escaped_value = pair.split(EQ, 2)
+        key = CGI.unescape(escaped_key)
+        value = escaped_value ? CGI.unescape(escaped_value) : nil
+        send(:decode_pair, key, value)
+      end
+    end
+
     def to_s
       pairs = []
       @hash.each do |key, value|
@@ -71,7 +80,25 @@ module Hurley
       pairs.join(AMP)
     end
 
+    def inspect
+      "#<%s %s>" % [
+        self.class.name,
+        @hash.inspect,
+      ]
+    end
+
     private
+
+    def self.inherited(base)
+      super
+      class << base
+        def parse(raw_query)
+          q = new
+          q.parse_query(raw_query)
+          q
+        end
+      end
+    end
 
     def encode_array(pairs, escaped_key, value)
       raise NotImplementedError
@@ -81,13 +108,6 @@ module Hurley
       raise NotImplementedError
     end
 
-    def inspect
-      "#<%s %s>" % [
-        self.class.name,
-        @hash.inspect,
-      ]
-    end
-
     AMP = "&".freeze
     EQ = "=".freeze
     EMPTY_BRACKET = "[]".freeze
@@ -95,49 +115,40 @@ module Hurley
     END_BRACKET = /\]\z/
 
     class Nested < self
-      def self.parse(raw_query)
-        q = new
+      private
 
-        raw_query.to_s.split(AMP).each do |pair|
-          escaped_key, escaped_value = pair.split(EQ, 2)
-          key = CGI.unescape(escaped_key)
-          value = escaped_value ? CGI.unescape(escaped_value) : nil
-
-          if escaped_key =~ END_BRACKET
-            first_key = key[0, key.index(START_BRACKET)]
-            hash_keys = [first_key, *key.scan(/\[([^\]]+)?\]/).map(&:first)]
-            last_index = hash_keys.size - 1
-            container = q
-            hash_keys.each_with_index do |hash_key, index|
-              if index < last_index
-                if hash_keys[index+1]
-                  container = if hash_key
-                    container[hash_key] ||= {}
-                  else
-                    c = {}
-                    container << c
-                    container = c
-                  end
-                else
-                  container = container[hash_key] ||= []
-                end
-              else
-                if hash_key
-                  container[hash_key] = value
-                else
-                  container << value
-                end
-              end
-            end
-          else
-            q[key] = value
-          end
+      def decode_pair(key, value)
+        if key !~ END_BRACKET
+          self[key] = value
+          return
         end
 
-        q
-      end
-
-      private
+        first_key = key[0, key.index(START_BRACKET)]
+        hash_keys = [first_key, *key.scan(/\[([^\]]+)?\]/).map(&:first)]
+        last_index = hash_keys.size - 1
+        container = self
+        hash_keys.each_with_index do |hash_key, index|
+          if index < last_index
+            if hash_keys[index+1]
+              container = if hash_key
+                container[hash_key] ||= {}
+              else
+                c = {}
+                container << c
+                container = c
+              end
+            else
+              container = container[hash_key] ||= []
+            end
+          else
+            if hash_key
+              container[hash_key] = value
+            else
+              container << value
+            end
+          end
+        end
+    end
 
       def encode_array(pairs, escaped_key, value)
         encode_nested_value(pairs, escaped_key, value)
@@ -167,25 +178,15 @@ module Hurley
     end
 
     class Flat < self
-      def self.parse(raw_query)
-        q = new
-
-        raw_query.to_s.split(AMP).each do |pair|
-          escaped_key, escaped_value = pair.split(EQ, 2)
-          key = CGI.unescape(escaped_key)
-          value = escaped_value ? CGI.unescape(escaped_value) : nil
-
-          if q.key?(key)
-            q[key] = Array(q[key]) << value
-          else
-            q[key] = value
-          end
-        end
-
-        q
-      end
-
       private
+
+      def decode_pair(key, value)
+        self[key] = if key?(key)
+          Array(self[key]) << value
+        else
+          value
+        end
+      end
 
       def encode_array(pairs, escaped_key, value)
         value.each do |item|
