@@ -12,16 +12,25 @@ module Hurley
           out = [request.request_method.downcase]
 
           if request.GET.any?
-            out << "GET: #{request.GET.inspect}"
+            out << "?#{request.GET.inspect}"
           end
 
           if request.POST.any?
-            out << "POST: #{request.POST.inspect}"
+            out << request.POST.inspect
           end
 
           content_type "text/plain"
-          out.join("\n")
+          out.join(" ")
         end
+      end
+
+      get "/echo_header" do
+        header = "HTTP_#{params[:name].tr('-', '_').upcase}"
+        request.env.fetch(header) { 'NONE' }
+      end
+
+      get "/ssl" do
+        request.secure?.to_s
       end
 
       get "/204" do

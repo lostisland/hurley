@@ -115,7 +115,7 @@ module Hurley
     def body_io
       if body.respond_to?(:read)
         body
-      else
+      elsif body
         StringIO.new(body)
       end
     end

@@ -113,10 +113,13 @@ module Hurley
     end
 
     def request_uri
+      req_path = path
+      req_path = SLASH if req_path.empty?
+
       if (q = query.to_s).empty?
-        path
+        req_path
       else
-        "#{path}?#{q}"
+        "#{req_path}?#{q}"
       end
     end
 
