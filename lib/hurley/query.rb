@@ -4,7 +4,7 @@ require "forwardable"
 module Hurley
   class Query
     def self.parser
-      @parser ||= parser_for(nil)
+      @parser ||= Hurley.mutex { parser_for(nil) }
     end
 
     def self.parser=(new_parser)
@@ -148,7 +148,7 @@ module Hurley
             end
           end
         end
-    end
+      end
 
       def encode_array(pairs, escaped_key, value)
         encode_nested_value(pairs, escaped_key, value)

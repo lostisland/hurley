@@ -24,7 +24,7 @@ module Hurley
     end
 
     def cert_store
-      self[:cert_store] ||= begin
+      self[:cert_store] ||= Hurley.mutex do
         cert_store = OpenSSL::X509::Store.new
         cert_store.set_default_paths
         cert_store

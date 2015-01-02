@@ -1,7 +1,10 @@
+require "thread"
+
 module Hurley
   VERSION = "0.1".freeze
   USER_AGENT = "Hurley v#{VERSION}".freeze
   LIB_PATH = __FILE__[0...-3]
+  MUTEX = Mutex.new
 
   def self.require_lib(*libs)
     libs.each do |lib|
@@ -10,10 +13,14 @@ module Hurley
   end
 
   def self.default_connection
-    @default_connection ||= begin
+    @default_connection ||= mutex do
       Hurley.require_lib "connection"
       Connection.new
     end
+  end
+
+  def self.mutex
+    MUTEX.synchronize(&Proc.new)
   end
 
   class Error < StandardError; end
