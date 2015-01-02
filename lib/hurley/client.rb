@@ -6,6 +6,8 @@ module Hurley
     attr_reader :url
     attr_reader :header
     attr_writer :connection
+    attr_reader :before_callbacks
+    attr_reader :after_callbacks
 
     def self.default_connection
       @default_connection ||= begin
@@ -71,33 +73,22 @@ module Hurley
     end
 
     def call(request)
-      @before_callbacks.each do |_, cb|
-        cb.call(request)
-      end
-
+      @before_callbacks.each { |cb| cb.call(request) }
       response = connection.call(request)
-
-      @after_callbacks.each do |_, cb|
-        cb.call(response)
-      end
-
+      @after_callbacks.each { |cb| cb.call(response) }
       response
     end
 
     def before_call(name = nil)
-      if !block_given?
-        raise ArgumentError, "Define this callback with a block that accepts a request"
-      end
-
-      @before_callbacks << [name || :undefined, Proc.new]
+      @before_callbacks << (block_given? ?
+        NamedCallback.for(name, Proc.new) :
+        NamedCallback.for(nil, name))
     end
 
     def after_call(name = nil)
-      if !block_given?
-        raise ArgumentError, "Define this callback with a block that accepts a response"
-      end
-
-      @after_callbacks << [name || :undefined, Proc.new]
+      @after_callbacks << (block_given? ?
+        NamedCallback.for(name, Proc.new) :
+        NamedCallback.for(nil, name))
     end
 
     def request(method, path)
@@ -187,6 +178,20 @@ module Hurley
 
     def join
       @chunks.join
+    end
+  end
+
+  class NamedCallback < Struct.new(:name, :callback)
+    def self.for(name, callback)
+      if callback.respond_to?(:name) && !name
+        callback
+      else
+        new(name || :undefined, callback)
+      end
+    end
+
+    def call(arg)
+      callback.call(arg)
     end
   end
 end

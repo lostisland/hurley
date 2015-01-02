@@ -19,5 +19,25 @@ module Hurley
       url = req.url
       assert_equal "https://example.com/a/b?a=1", url.to_s
     end
+
+    def test_sets_before_callbacks
+      c = Client.new nil
+      c.before_call(:first) { |r| 1 }
+      c.before_call { |r| 2 }
+      c.before_call NamedCallback.new(:third, lambda { |r| 3 })
+
+      assert_equal [:first, :undefined, :third], c.before_callbacks.map(&:name)
+      assert_equal [1,2,3], c.before_callbacks.inject([]) { |list, cb| list << cb.call(nil) }
+    end
+
+    def test_sets_after_callbacks
+      c = Client.new nil
+      c.after_call(:first) { |r| 1 }
+      c.after_call { |r| 2 }
+      c.after_call NamedCallback.new(:third, lambda { |r| 3 })
+
+      assert_equal [:first, :undefined, :third], c.after_callbacks.map(&:name)
+      assert_equal [1,2,3], c.after_callbacks.inject([]) { |list, cb| list << cb.call(nil) }
+    end
   end
 end
