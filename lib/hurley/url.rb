@@ -47,7 +47,6 @@ module Hurley
     end
 
     def path=(new_path)
-      @parent_path_regex = nil
       @parsed.path = new_path
     end
 
