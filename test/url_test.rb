@@ -2,6 +2,132 @@ require File.expand_path("../helper", __FILE__)
 
 module Hurley
   class UrlTest < TestCase
+    def test_join
+      errors = []
+
+      {
+        "https://example.com?v=1" => {
+          "" => "https://example.com?v=1",
+          "/" => "https://example.com/?v=1",
+          "?a=1" => "https://example.com?a=1&v=1",
+          "/?a=1" => "https://example.com/?a=1&v=1",
+          "?v=2&a=1" => "https://example.com?v=2&a=1",
+          "/?v=2&a=1" => "https://example.com/?v=2&a=1",
+          "a" => "https://example.com/a?v=1",
+          "a/" => "https://example.com/a/?v=1",
+          "a?a=1" => "https://example.com/a?a=1&v=1",
+          "a/?a=1" => "https://example.com/a/?a=1&v=1",
+          "a?v=2&a=1" => "https://example.com/a?v=2&a=1",
+          "a/?v=2&a=1" => "https://example.com/a/?v=2&a=1",
+          "a/b" => "https://example.com/a/b?v=1",
+          "a/b/" => "https://example.com/a/b/?v=1",
+          "a/b?a=1" => "https://example.com/a/b?a=1&v=1",
+          "a/b/?a=1" => "https://example.com/a/b/?a=1&v=1",
+          "a/b?v=2&a=1" => "https://example.com/a/b?v=2&a=1",
+          "a/b/?v=2&a=1" => "https://example.com/a/b/?v=2&a=1",
+        },
+
+        "https://example.com/?v=1" => {
+          "" => "https://example.com/?v=1",
+          "/" => "https://example.com/?v=1",
+          "?a=1" => "https://example.com/?a=1&v=1",
+          "/?a=1" => "https://example.com/?a=1&v=1",
+          "?v=2&a=1" => "https://example.com/?v=2&a=1",
+          "/?v=2&a=1" => "https://example.com/?v=2&a=1",
+          "a" => "https://example.com/a?v=1",
+          "a/" => "https://example.com/a/?v=1",
+          "a?a=1" => "https://example.com/a?a=1&v=1",
+          "a/?a=1" => "https://example.com/a/?a=1&v=1",
+          "a?v=2&a=1" => "https://example.com/a?v=2&a=1",
+          "a/?v=2&a=1" => "https://example.com/a/?v=2&a=1",
+          "a/b" => "https://example.com/a/b?v=1",
+          "a/b/" => "https://example.com/a/b/?v=1",
+          "a/b?a=1" => "https://example.com/a/b?a=1&v=1",
+          "a/b/?a=1" => "https://example.com/a/b/?a=1&v=1",
+          "a/b?v=2&a=1" => "https://example.com/a/b?v=2&a=1",
+          "a/b/?v=2&a=1" => "https://example.com/a/b/?v=2&a=1",
+        },
+
+        "https://example.com/a?v=1" => {
+          "" => "https://example.com/a?v=1",
+          "/" => "https://example.com/?v=1",
+          "?a=1" => "https://example.com/a?a=1&v=1",
+          "/?a=1" => "https://example.com/?a=1&v=1",
+          "?v=2&a=1" => "https://example.com/a?v=2&a=1",
+          "/?v=2&a=1" => "https://example.com/?v=2&a=1",
+          "/a" => "https://example.com/a?v=1",
+          "/a/" => "https://example.com/a/?v=1",
+          "/a?a=1" => "https://example.com/a?a=1&v=1",
+          "/a/?a=1" => "https://example.com/a/?a=1&v=1",
+          "/a?v=2&a=1" => "https://example.com/a?v=2&a=1",
+          "/a/?v=2&a=1" => "https://example.com/a/?v=2&a=1",
+          "/a/b" => "https://example.com/a/b?v=1",
+          "/a/b/" => "https://example.com/a/b/?v=1",
+          "/a/b?a=1" => "https://example.com/a/b?a=1&v=1",
+          "/a/b/?a=1" => "https://example.com/a/b/?a=1&v=1",
+          "/a/b?v=2&a=1" => "https://example.com/a/b?v=2&a=1",
+          "/a/b/?v=2&a=1" => "https://example.com/a/b/?v=2&a=1",
+          "c" => "https://example.com/a/c?v=1",
+          "c/" => "https://example.com/a/c/?v=1",
+          "c?a=1" => "https://example.com/a/c?a=1&v=1",
+          "c/?a=1" => "https://example.com/a/c/?a=1&v=1",
+          "c?v=2&a=1" => "https://example.com/a/c?v=2&a=1",
+          "c/?v=2&a=1" => "https://example.com/a/c/?v=2&a=1",
+          "/c" => "https://example.com/c?v=1",
+          "/c/" => "https://example.com/c/?v=1",
+          "/c?a=1" => "https://example.com/c?a=1&v=1",
+          "/c/?a=1" => "https://example.com/c/?a=1&v=1",
+          "/c?v=2&a=1" => "https://example.com/c?v=2&a=1",
+          "/c/?v=2&a=1" => "https://example.com/c/?v=2&a=1",
+        },
+
+        "https://example.com/a/?v=1" => {
+          "" => "https://example.com/a/?v=1",
+          "/" => "https://example.com/?v=1",
+          "?a=1" => "https://example.com/a/?a=1&v=1",
+          "/?a=1" => "https://example.com/?a=1&v=1",
+          "?v=2&a=1" => "https://example.com/a/?v=2&a=1",
+          "/?v=2&a=1" => "https://example.com/?v=2&a=1",
+          "/a" => "https://example.com/a?v=1",
+          "/a/" => "https://example.com/a/?v=1",
+          "/a?a=1" => "https://example.com/a?a=1&v=1",
+          "/a/?a=1" => "https://example.com/a/?a=1&v=1",
+          "/a?v=2&a=1" => "https://example.com/a?v=2&a=1",
+          "/a/?v=2&a=1" => "https://example.com/a/?v=2&a=1",
+          "/a/b" => "https://example.com/a/b?v=1",
+          "/a/b/" => "https://example.com/a/b/?v=1",
+          "/a/b?a=1" => "https://example.com/a/b?a=1&v=1",
+          "/a/b/?a=1" => "https://example.com/a/b/?a=1&v=1",
+          "/a/b?v=2&a=1" => "https://example.com/a/b?v=2&a=1",
+          "/a/b/?v=2&a=1" => "https://example.com/a/b/?v=2&a=1",
+          "c" => "https://example.com/a/c?v=1",
+          "c/" => "https://example.com/a/c/?v=1",
+          "c?a=1" => "https://example.com/a/c?a=1&v=1",
+          "c/?a=1" => "https://example.com/a/c/?a=1&v=1",
+          "c?v=2&a=1" => "https://example.com/a/c?v=2&a=1",
+          "c/?v=2&a=1" => "https://example.com/a/c/?v=2&a=1",
+          "/c" => "https://example.com/c?v=1",
+          "/c/" => "https://example.com/c/?v=1",
+          "/c?a=1" => "https://example.com/c?a=1&v=1",
+          "/c/?a=1" => "https://example.com/c/?a=1&v=1",
+          "/c?v=2&a=1" => "https://example.com/c?v=2&a=1",
+          "/c/?v=2&a=1" => "https://example.com/c/?v=2&a=1",
+        },
+      }.each do |endpoint, tests|
+        absolute = Url.parse(endpoint)
+        tests.each do |input, expected|
+          actual = Url.join(absolute, input).to_s
+          if actual != expected
+            errors << "#{endpoint.inspect} + #{input.inspect} = #{actual.inspect}"
+          end
+        end
+      end
+
+      if errors.any?
+        fail "\n" + errors.join("\n")
+      end
+    end
+
     def test_escape
       {
         "abc" => "abc",
@@ -74,136 +200,6 @@ module Hurley
       assert_equal %w(a), u.query.keys
       assert_equal "1", u.query["a"]
       assert_equal "https://example.com/foo?a=1", u.to_s
-    end
-
-    def test_joining_url_with_host
-      u = Url.parse("https://example.com?a=1")
-
-      {
-        ""                                    => "https://example.com?a=1",
-        "/"                                   => "https://example.com/?a=1",
-        "foo"                                 => "https://example.com/foo?a=1",
-        "foo?a=1"                             => "https://example.com/foo?a=1",
-        "foo?a=1&b=2"                         => "https://example.com/foo?a=1&b=2",
-        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
-        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
-        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
-        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
-        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
-      }.each do |input, expected|
-        assert u.parent_of?(Url.parse(input)),
-        "#{u.to_s.inspect} not parent of #{input.inspect}"
-
-        assert_equal expected, Url.join(u, input).to_s
-      end
-
-      [
-        "?a=2",
-        "bar?a=2",
-        "/foo?a=2",
-        "https://example.com/foo?a=2",
-        "http://example.com/foo?a=1",
-        "https://example.com:9999/foo?a=1",
-        "https://example2.com/foo?a=1",
-      ].each do |input|
-        assert !u.parent_of?(Url.parse(input)),
-        "#{u.to_s.inspect} is parent of #{input.inspect}"
-
-        assert_equal input, Url.join(u, input).to_s
-      end
-    end
-
-    def test_joining_url_with_slash
-      u = Url.parse("https://example.com/?a=1")
-
-      {
-        ""                                    => "https://example.com/?a=1",
-        "/"                                   => "https://example.com/?a=1",
-        "foo"                                 => "https://example.com/foo?a=1",
-        "foo?a=1"                             => "https://example.com/foo?a=1",
-        "foo?a=1&b=2"                         => "https://example.com/foo?a=1&b=2",
-        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
-        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
-        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
-        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
-        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
-      }.each do |input, expected|
-        assert u.parent_of?(Url.parse(input)),
-        "#{u.to_s.inspect} not parent of #{input.inspect}"
-
-        assert_equal expected, Url.join(u, input).to_s
-      end
-
-      [
-        "?a=2",
-        "bar?a=2",
-        "/foo?a=2",
-        "https://example.com/foo?a=2",
-        "http://example.com/foo?a=1",
-        "https://example.com:9999/foo?a=1",
-        "https://example2.com/foo?a=1",
-      ].each do |input|
-        assert !u.parent_of?(Url.parse(input)),
-        "#{u.to_s.inspect} is parent of #{input.inspect}"
-
-        assert_equal input, Url.join(u, input).to_s
-      end
-    end
-
-    def test_joining_url_with_path
-      u = Url.parse("https://example.com/foo?a=1")
-
-      {
-        ""                                    => "https://example.com/foo?a=1",
-        "bar"                                 => "https://example.com/foo/bar?a=1",
-        "bar?a=1"                             => "https://example.com/foo/bar?a=1",
-        "bar?a=1&b=2"                         => "https://example.com/foo/bar?a=1&b=2",
-        "/foo?a=1&b=2"                        => "https://example.com/foo?a=1&b=2",
-        "/foo/bar?a=1&b=2"                    => "https://example.com/foo/bar?a=1&b=2",
-        "https://example.com/foo?b=2"         => "https://example.com/foo?b=2&a=1",
-        "https://example.com/foo?a=1&b=2"     => "https://example.com/foo?a=1&b=2",
-        "https://example.com/foo/bar?a=1&b=2" => "https://example.com/foo/bar?a=1&b=2",
-      }.each do |input, expected|
-        assert u.parent_of?(Url.parse(input)),
-          "#{u.to_s.inspect} not parent of #{input.inspect}"
-
-        assert_equal expected, Url.join(u, input).to_s
-      end
-
-      [
-        "?a=2",
-        "bar?a=2",
-        "/",
-        "/foo?a=2",
-        "/food",
-        "https://example.com/foo?a=2",
-        "https://example.com/food",
-        "http://example.com/foo?a=1",
-        "https://example.com:9999/foo?a=1",
-        "https://example2.com/foo?a=1",
-      ].each do |input|
-        assert !u.parent_of?(Url.parse(input)),
-          "#{u.to_s.inspect} is parent of #{input.inspect}"
-
-        assert_equal input, Url.join(u, input).to_s
-      end
-    end
-
-    def test_joining_empty_url
-      u = Url.parse(nil)
-
-      [
-        "",
-        "/",
-        "/foo?a=1",
-        "https://example.com/foo",
-        "https://example.com/foo?a=1",
-      ].each do |input|
-        assert !u.parent_of?(Url.parse(input)),
-          "#{u.to_s.inspect} is parent of #{input.inspect}"
-
-        assert_equal input, Url.join(nil, input).to_s
-      end
     end
   end
 end

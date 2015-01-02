@@ -41,13 +41,20 @@ module Hurley
       :key?,
     )
 
+    def subset_of?(url)
+      query = url.respond_to?(:query) ? url.query : url
+      @hash.keys.all? do |key|
+        query[key] == @hash[key]
+      end
+    end
+
     def merge(absolute)
       absolute.each do |key, value|
         @hash[key] = value unless key?(key)
       end
     end
 
-    def encode
+    def to_s
       pairs = []
       @hash.each do |key, value|
         escaped_key = Url.escape_path(key)

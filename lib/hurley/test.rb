@@ -43,10 +43,19 @@ module Hurley
       @handlers.all?(&:run?)
     end
 
-    class Handler < Struct.new(:request, :callback)
+    class Handler
+      attr_reader :request
+      attr_reader :callback
+
+      def initialize(request, callback)
+        @request = request
+        @callback = callback
+        @path_regex = %r{\A#{@request.url.path}(/|\z)}
+      end
+
       def call(request)
         @run = true
-        status, header, body = callback.call(request)
+        status, header, body = @callback.call(request)
         Response.new(request, status, Header.new(header)) do |res|
           Array(body).each do |chunk|
             res.receive_body(chunk)
@@ -55,20 +64,26 @@ module Hurley
       end
 
       def matches?(request)
-        return false unless self.request.verb == request.verb
+        return false unless @request.verb == request.verb
 
-        handler_url = self.request.url
-        if handler_url.host.to_s.empty?
-          handler_url.path_parent_of?(request.url) &&
-            handler_url.query_parent_of?(request.url)
-        else
-          handler_url.parent_of?(request.url)
+        handler_url = @request.url
+        request_url = request.url
+
+        URL_ATTRS.each do |attr|
+          value = handler_url.send(attr)
+          return false if value && value != request_url.send(attr)
         end
+
+        handler_url.query.subset_of?(request_url.query) &&
+          (handler_url.path =~ EMPTY_OR_SLASH || request_url.path =~ @path_regex)
       end
 
       def run?
         !!@run
       end
+
+      EMPTY_OR_SLASH = %r{\A/?\z}
+      URL_ATTRS = [:scheme, :host, :port]
     end
 
     def self.not_found(request)
