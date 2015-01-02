@@ -4,7 +4,7 @@ module Hurley
   class Header
     def initialize(initial = nil)
       @hash = {}
-      merge(initial) if initial
+      update(initial) if initial
     end
 
     extend Forwardable
@@ -30,7 +30,7 @@ module Hurley
       @hash.delete(self.class.canonical(key))
     end
 
-    def merge(hash)
+    def update(hash)
       hash.each do |key, value|
         self[key] = value
       end

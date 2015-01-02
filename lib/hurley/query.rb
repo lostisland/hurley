@@ -27,8 +27,9 @@ module Hurley
       parser.call(raw_query)
     end
 
-    def initialize
+    def initialize(initial = nil)
       @hash = {}
+      update(initial) if initial
     end
 
     extend Forwardable
@@ -48,7 +49,7 @@ module Hurley
       end
     end
 
-    def merge(absolute)
+    def update(absolute)
       absolute.each do |key, value|
         @hash[key] = value unless key?(key)
       end
