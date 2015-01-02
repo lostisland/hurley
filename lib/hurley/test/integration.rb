@@ -51,6 +51,64 @@ module Hurley
           assert_equal expected, client.get("ssl").body
         end
 
+        def test_POST_send_url_encoded_params
+          res = client.post "echo" do |req|
+            req.body = "name=zack"
+            req.header[:content_type] = "application/x-www-form-urlencoded"
+            req.header[:content_length] = 9
+          end
+          assert_equal %(post {"name"=>"zack"}), res.body
+        end
+
+        def test_POST_send_url_encoded_nested_params
+          res = client.post "echo" do |req|
+            req.body = "name[first]=zack"
+            req.header[:content_type] = "application/x-www-form-urlencoded"
+            req.header[:content_length] = 16
+          end
+          assert_equal %(post {"name"=>{"first"=>"zack"}}), res.body
+        end
+
+        def test_POST_retrieves_the_response_headers
+          res = client.post("echo") do |req|
+            req.header[:content_length] = 0
+          end
+          assert_match(/text\/plain/, res.header[:content_type])
+        end
+
+        def test_PUT_send_url_encoded_params
+          res = client.put "echo" do |req|
+            req.body = "name=zack"
+            req.header[:content_type] = "application/x-www-form-urlencoded"
+            req.header[:content_length] = 9
+          end
+          assert_equal %(put {"name"=>"zack"}), res.body
+        end
+
+        def test_PUT_send_url_encoded_nested_params
+          res = client.put "echo" do |req|
+            req.body = "name[first]=zack"
+            req.header[:content_type] = "application/x-www-form-urlencoded"
+            req.header[:content_length] = 16
+          end
+          assert_equal %(put {"name"=>{"first"=>"zack"}}), res.body
+        end
+
+        def test_PUT_retrieves_the_response_headers
+          res = client.put("echo") do |req|
+            req.header[:content_length] = 0
+          end
+          assert_match(/text\/plain/, res.header[:content_type])
+        end
+
+        def test_PATCH_send_url_encoded_params
+          res = client.patch "echo" do |req|
+            req.body = "name=zack"
+            req.header[:content_length] = 9
+          end
+          assert_equal %(patch {"name"=>"zack"}), res.body
+        end
+
         def test_OPTIONS
           assert_equal "options", client.options("echo").body
         end

@@ -44,6 +44,12 @@ module Hurley
       call(req)
     end
 
+    def patch(path)
+      req = request(:patch, path)
+      yield req if block_given?
+      call(req)
+    end
+
     def put(path)
       req = request(:put, path)
       yield req if block_given?
