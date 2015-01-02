@@ -66,17 +66,17 @@ module Hurley
     end
 
     def configure_ssl(http, request)
+      ssl = request.ssl_options
       http.use_ssl = true
-      http.verify_mode = OpenSSL::SSL::VERIFY_PEER
-      http.cert_store = self.class.default_ssl_cert_store
-    end
+      http.verify_mode = ssl.verify_mode
+      http.cert_store = ssl.cert_store
 
-    def self.default_ssl_cert_store
-      @default_ssl_cert_store ||= begin
-        cert_store = OpenSSL::X509::Store.new
-        cert_store.set_default_paths
-        cert_store
-      end
+      http.cert = ssl.client_cert if ssl.client_cert
+      http.key = ssl.client_key if ssl.client_key
+      http.ca_file = ssl.ca_file if ssl.ca_file
+      http.ca_path = ssl.ca_path if ssl.ca_path
+      http.verify_depth = ssl.verify_depth if ssl.verify_depth
+      http.ssl_version = ssl.version if ssl.version
     end
 
     NET_HTTP_EXCEPTIONS = [

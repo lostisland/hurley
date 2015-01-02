@@ -1,26 +1,22 @@
 module Hurley
   class Test
     module Integration
-      def self.live_endpoint
-        @live_endpoint ||= ENV["HURLEY_LIVE"]
-      end
+      class << self
+        attr_writer :live_endpoint
+        attr_writer :ssl_file
 
-      def self.live_endpoint=(e)
-        @live_endpoint = e
-      end
-
-      def self.ssl?
-        if @ssl.nil?
-          @ssl = !ENV["HURLEY_SSL"].to_s.empty?
+        def live_endpoint
+          @live_endpoint ||= ENV["HURLEY_LIVE"].to_s
         end
-        @ssl
-      end
 
-      def self.ssl=(bool)
-        @ssl = bool
-      end
+        def ssl_file
+          @ssl_file ||= ENV["HURLEY_SSL_FILE"].to_s
+        end
 
-      self.ssl = nil
+        def ssl?
+          live_endpoint.start_with?(Hurley::HTTPS)
+        end
+      end
 
       def self.apply(base, *extra_features)
         features = [:Common, *extra_features]
@@ -45,15 +41,22 @@ module Hurley
           @client ||= Client.new(Integration.live_endpoint) do |cli|
             cli.header["X-Hurley-Connection"] = connection.class.name
             cli.connection = connection
+
+            if Integration.ssl?
+              cli.ssl_options.ca_file = Integration.ssl_file
+            end
           end
         end
       end
 
       module SSL
         def test_GET_ssl_fails_with_bad_cert
+          client.ssl_options.ca_file = "tmp/hurley-different-ca-cert.crt"
+
           err = assert_raises Hurley::SSLError do
             client.get("/ssl")
           end
+
           assert_includes err.message, "certificate"
         end
       end

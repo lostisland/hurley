@@ -6,6 +6,7 @@ module Hurley
     attr_reader :url
     attr_reader :header
     attr_writer :connection
+    attr_reader :ssl_options
     attr_reader :before_callbacks
     attr_reader :after_callbacks
 
@@ -15,6 +16,7 @@ module Hurley
       @url = Url.parse(endpoint)
       @header = Header.new :user_agent => Hurley::USER_AGENT
       @connection = nil
+      @ssl_options = SslOptions.new
       yield self if block_given?
     end
 
@@ -93,11 +95,19 @@ module Hurley
     end
 
     def request(method, path)
-      Request.new(method, Url.join(@url, path), @header.dup)
+      req = Request.new(method, Url.join(@url, path), @header.dup)
+      req.ssl_options = @ssl_options
+      req
     end
   end
 
   class Request < Struct.new(:verb, :url, :header, :body)
+    attr_writer :ssl_options
+
+    def ssl_options
+      @ssl_options ||= SslOptions.new
+    end
+
     def query
       url.query
     end

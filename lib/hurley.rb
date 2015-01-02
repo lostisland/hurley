@@ -65,6 +65,7 @@ module Hurley
   HTTPS = "https".freeze
 
   require_lib(
+    "options",
     "header",
     "url",
     "query",
