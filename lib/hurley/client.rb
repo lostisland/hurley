@@ -145,7 +145,10 @@ module Hurley
       @header = header || Header.new
       @body = nil
       @receiver = nil
+      @timing = nil
+      @started_at = Time.now.to_f
       yield self
+      @ended_at = Time.now.to_f
       if @receiver.respond_to?(:join)
         @body = @receiver.join
       end
@@ -163,13 +166,18 @@ module Hurley
       @receiver.call(self, chunk)
     end
 
+    def ms
+      @timing ||= ((@ended_at - @started_at) * 1000).to_i
+    end
+
     def inspect
-      "#<%s %s %s == %d%s>" % [
+      "#<%s %s %s == %d%s %dms>" % [
         self.class.name,
         @request.verb.to_s.upcase,
         @request.url.to_s,
         @status_code.to_i,
         @body ? " (#{@body.bytesize} bytes)" : nil,
+        ms,
       ]
     end
   end
