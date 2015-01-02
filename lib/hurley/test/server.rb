@@ -25,8 +25,8 @@ module Hurley
       end
 
       get "/echo_header" do
-        header = "HTTP_#{params[:name].tr('-', '_').upcase}"
-        request.env.fetch(header) { 'NONE' }
+        header = "HTTP_#{params[:name].tr("-", "_").upcase}"
+        request.env.fetch(header) { "NONE" }
       end
 
       get "/ssl" do

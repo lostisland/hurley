@@ -37,8 +37,8 @@ module Hurley
 
         def test_GET_retrieves_the_response_headers
           response = client.get("echo")
-          assert_match(/text\/plain/, response.header['Content-Type'])
-          assert_match(/text\/plain/, response.header['content-type'])
+          assert_match(/text\/plain/, response.header["Content-Type"])
+          assert_match(/text\/plain/, response.header["content-type"])
           assert_match(/text\/plain/, response.header[:content_type])
         end
 
@@ -114,11 +114,11 @@ module Hurley
         end
 
         def test_HEAD_retrieves_no_response_body
-          assert_equal '', client.head("echo").body
+          assert_equal "", client.head("echo").body
         end
 
         def test_HEAD_retrieves_the_response_headers
-          assert_match(/text\/plain/, client.head('echo').header[:content_type])
+          assert_match(/text\/plain/, client.head("echo").header[:content_type])
         end
 
         def test_DELETE_retrieves_the_response_headers
