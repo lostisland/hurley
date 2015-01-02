@@ -49,7 +49,6 @@ end
 
 ## TODO
 
-* [ ] live server tests
 * [ ] logging
 * [ ] multipart posts
 * [ ] redirections
