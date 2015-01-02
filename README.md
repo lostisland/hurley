@@ -50,7 +50,6 @@ end
 ## TODO
 
 * [ ] basic authentication
-* [ ] callbacks
 * [ ] live server tests
 * [ ] logging
 * [ ] multipart posts
