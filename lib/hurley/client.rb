@@ -138,6 +138,8 @@ module Hurley
       ]
     end
 
+    private
+
     def body_receiver
       @body_receiver ||= [nil, BodyReceiver.new]
     end
@@ -166,7 +168,7 @@ module Hurley
 
     def receive_body(chunk)
       if @receiver.nil?
-        statuses, receiver = request.body_receiver
+        statuses, receiver = request.send(:body_receiver)
         @receiver = if statuses && !statuses.include?(@status_code)
           BodyReceiver.new
         else
