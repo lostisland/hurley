@@ -2,6 +2,29 @@ require File.expand_path("../helper", __FILE__)
 
 module Hurley
   class HeaderTest < TestCase
+    def test_integration
+      client = Client.new "https://example.com"
+      client.header["Client"] = "1"
+      client.header["Override"] = "1"
+      client.connection = Test.new do |t|
+        t.get("/a") do |req|
+          output = []
+          req.header.each do |key, value|
+            output << "#{key}:#{value}"
+          end
+          [200, {}, output.join("\n")]
+        end
+      end
+
+      res = client.get("/a") do |req|
+        req.header["Request"] = "2"
+        req.header["Override"] = "2"
+      end
+
+      assert_equal 200, res.status_code
+      assert_equal "User-Agent:Hurley v0.1\nClient:1\nOverride:2\nRequest:2", res.body
+    end
+
     def test_empty_initial
       h = Header.new
       assert !h.key?(:content_type)
