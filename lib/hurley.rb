@@ -9,6 +9,13 @@ module Hurley
     end
   end
 
+  def self.default_connection
+    @default_connection ||= begin
+      Hurley.require_lib "connection"
+      Connection.new
+    end
+  end
+
   class Error < StandardError; end
 
   class ClientError < Error

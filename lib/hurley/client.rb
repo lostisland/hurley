@@ -9,19 +9,13 @@ module Hurley
     attr_reader :before_callbacks
     attr_reader :after_callbacks
 
-    def self.default_connection
-      @default_connection ||= begin
-        Hurley.require_lib "connection"
-        Connection.new
-      end
-    end
-
     def initialize(endpoint)
       @before_callbacks = []
       @after_callbacks = []
       @url = Url.parse(endpoint)
       @header = Header.new :user_agent => Hurley::USER_AGENT
       @connection = nil
+      yield self if block_given?
     end
 
     extend Forwardable
@@ -33,7 +27,7 @@ module Hurley
     )
 
     def connection
-      @connection ||= self.class.default_connection
+      @connection ||= Hurley.default_connection
     end
 
     def head(path)
