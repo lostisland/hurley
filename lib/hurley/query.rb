@@ -4,28 +4,12 @@ require "stringio"
 
 module Hurley
   class Query
-    def self.parser
-      @parser ||= Hurley.mutex { parser_for(nil) }
-    end
-
-    def self.parser=(new_parser)
-      @parser = parser_for(new_parser)
-    end
-
-    def self.parser_for(new_parser)
-      if new_parser.respond_to?(:call)
-        new_parser
-      elsif PARSERS.key?(new_parser)
-        PARSERS[new_parser]
-      elsif new_parser.nil?
-        PARSERS[:nested]
-      else
-        raise ArgumentError, "#{name} parser should respond to #call(raw_query) or be one of #{PARSERS.keys.inspect}: #{new_parser.inspect}"
-      end
+    def self.default
+      @default ||= Nested
     end
 
     def self.parse(raw_query)
-      parser.call(raw_query)
+      default.parse(raw_query)
     end
 
     def self.response_body(raw_query)
@@ -263,9 +247,5 @@ module Hurley
 
     FORM_TYPE = "application/x-www-form-urlencoded".freeze
     MULTIPART_TYPE = "multipart/form-data; boundary=%s".freeze
-    PARSERS = {
-      :nested => Nested.method(:parse),
-      :flat => Flat.method(:parse),
-    }
   end
 end

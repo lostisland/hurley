@@ -64,7 +64,7 @@ module Hurley
     end
 
     def query
-      @query ||= query_parser.call(@parsed.query)
+      @query ||= query_class.parse(@parsed.query)
     end
 
     def join(relative)
@@ -146,12 +146,12 @@ module Hurley
       "Basic #{Base64.encode64("#{@user}:#{@password}").rstrip}"
     end
 
-    def query_parser
-      @query_parser ||= Query.parser_for(nil)
+    def query_class
+      @query_class ||= Query.default
     end
 
-    def query_parser=(new_parser)
-      @query_parser = Query.parser_for(new_parser)
+    def query_class=(new_query)
+      @query_class = new_query
     end
 
     def inspect
@@ -174,7 +174,7 @@ module Hurley
     class Empty < self
       def initialize
         @parsed = URI.parse(EMPTY)
-        @query = Query.parser_for(nil).call(EMPTY)
+        @query = Query.parse(EMPTY)
       end
 
       def relation_with(url)
