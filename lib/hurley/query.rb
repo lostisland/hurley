@@ -12,16 +12,6 @@ module Hurley
       default.parse(raw_query)
     end
 
-    def self.response_body(raw_query)
-      query = raw_query === self ? raw_query : new(raw_query)
-      if query.multipart?
-        boundary = Multipart.boundary
-        return MULTIPART_TYPE % boundary, query.to_io(boundary)
-      else
-        return FORM_TYPE, StringIO.new(query.to_s)
-      end
-    end
-
     def initialize(initial = nil)
       @hash = {}
       update(initial) if initial
@@ -63,38 +53,17 @@ module Hurley
       any_multipart?(@hash.values)
     end
 
-    def any_multipart?(array)
-      array.any? do |v|
-        case v
-        when Array then any_multipart?(v)
-        when Hash then any_multipart?(v.values)
-        else
-          v.respond_to?(:read)
-        end
-      end
-    end
-
-    def to_io(boundary = nil, part_headers = nil)
-      parts = []
-
-      boundary ||= Multipart.boundary
-      part_headers ||= {}
-      build_pairs.each do |pair|
-        parts << Multipart::Part.new(boundary, pair.key, pair.value, part_headers[pair.key])
-      end
-      parts << Multipart::EpiloguePart.new(boundary)
-      ios = []
-      len = 0
-      parts.each do |part|
-        len += part.length
-        ios << part.to_io
-      end
-
-      CompositeReadIO.new(len, *ios)
-    end
-
     def to_s
       build_pairs.map!(&:to_s).join(AMP)
+    end
+
+    def to_form
+      if multipart?
+        boundary = Multipart.boundary
+        return MULTIPART_TYPE % boundary, to_io(boundary)
+      else
+        return FORM_TYPE, StringIO.new(to_s)
+      end
     end
 
     def inspect
@@ -102,35 +71,6 @@ module Hurley
         self.class.name,
         @hash.inspect,
       ]
-    end
-
-    private
-
-    class Pair < Struct.new(:key, :escaped_key, :value)
-      def to_s
-        if value
-          "#{escaped_key}=#{Url.escape_path(value)}"
-        else
-          escaped_key
-        end
-      end
-    end
-
-    def build_pairs
-      pairs = []
-      @hash.each do |key, value|
-        escaped_key = Url.escape_path(key)
-        case value
-        when nil then pairs << Pair.new(key, escaped_key, nil)
-        when Array
-          encode_array(pairs, key, escaped_key, value)
-        when Hash
-          encode_hash(pairs, key, escaped_key, value)
-        else
-          pairs << Pair.new(key, escaped_key, value)
-        end
-      end
-      pairs
     end
 
     def self.inherited(base)
@@ -143,21 +83,6 @@ module Hurley
         end
       end
     end
-
-    def encode_array(pairs, key, escaped_key, value)
-      raise NotImplementedError
-    end
-
-    def encode_hash(pairs, key, escaped_key, value)
-      raise NotImplementedError
-    end
-
-    AMP = "&".freeze
-    EQ = "=".freeze
-    EMPTY_BRACKET = "[]".freeze
-    EMPTY_ESCAPED_BRACKET = "%5B%5D".freeze
-    START_BRACKET = "[".freeze
-    END_BRACKET = /\]\z/
 
     class Nested < self
       private
@@ -245,6 +170,81 @@ module Hurley
       end
     end
 
+    class Pair < Struct.new(:key, :escaped_key, :value)
+      def to_s
+        if value
+          "#{escaped_key}=#{Url.escape_path(value)}"
+        else
+          escaped_key
+        end
+      end
+    end
+
+    # Private Hurley::Query methods
+
+    private
+
+    def any_multipart?(array)
+      array.any? do |v|
+        case v
+        when Array then any_multipart?(v)
+        when Hash then any_multipart?(v.values)
+        else
+          v.respond_to?(:read)
+        end
+      end
+    end
+
+    def to_io(boundary = nil, part_headers = nil)
+      parts = []
+
+      boundary ||= Multipart.boundary
+      part_headers ||= {}
+      build_pairs.each do |pair|
+        parts << Multipart::Part.new(boundary, pair.key, pair.value, part_headers[pair.key])
+      end
+      parts << Multipart::EpiloguePart.new(boundary)
+      ios = []
+      len = 0
+      parts.each do |part|
+        len += part.length
+        ios << part.to_io
+      end
+
+      CompositeReadIO.new(len, *ios)
+    end
+
+    def build_pairs
+      pairs = []
+      @hash.each do |key, value|
+        escaped_key = Url.escape_path(key)
+        case value
+        when nil then pairs << Pair.new(key, escaped_key, nil)
+        when Array
+          encode_array(pairs, key, escaped_key, value)
+        when Hash
+          encode_hash(pairs, key, escaped_key, value)
+        else
+          pairs << Pair.new(key, escaped_key, value)
+        end
+      end
+      pairs
+    end
+
+    def encode_array(pairs, key, escaped_key, value)
+      raise NotImplementedError
+    end
+
+    def encode_hash(pairs, key, escaped_key, value)
+      raise NotImplementedError
+    end
+
+    AMP = "&".freeze
+    EQ = "=".freeze
+    EMPTY_BRACKET = "[]".freeze
+    EMPTY_ESCAPED_BRACKET = "%5B%5D".freeze
+    START_BRACKET = "[".freeze
+    END_BRACKET = /\]\z/
     FORM_TYPE = "application/x-www-form-urlencoded".freeze
     MULTIPART_TYPE = "multipart/form-data; boundary=%s".freeze
   end

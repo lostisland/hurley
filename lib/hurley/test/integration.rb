@@ -78,9 +78,9 @@ module Hurley
 
         def test_POST_sends_files
           resp = client.post("file") do |req|
-            ctype, body = Query::Flat.response_body(
+            ctype, body = Query::Flat.new(
               :uploaded_file => UploadIO.new(__FILE__, "text/x-ruby"),
-            )
+            ).to_form
             req.header[:content_type] = ctype
             req.header[:content_length] = body.length
             req.body = body

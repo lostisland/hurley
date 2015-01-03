@@ -3,23 +3,23 @@ require File.expand_path("../helper", __FILE__)
 module Hurley
   class MultipartTest < TestCase
     def test_build_form_with_flat_query
-      ctype, body = Query::Flat.response_body(:a => [1,2,3])
+      ctype, body = Query::Flat.new(:a => [1,2,3]).to_form
       assert_equal "application/x-www-form-urlencoded", ctype
       assert_equal "a=1&a=2&a=3", body.read
     end
 
     def test_build_form_with_nested_query
-      ctype, body = Query::Nested.response_body(:a => {:b => 2})
+      ctype, body = Query::Nested.new(:a => {:b => 2}).to_form
       assert_equal "application/x-www-form-urlencoded", ctype
       assert_equal "a%5Bb%5D=2", body.read
     end
 
     def test_build_multipart_with_flat_query
-      ctype, body = Query::Flat.response_body(
+      ctype, body = Query::Flat.new(
         :a => 1,
         :array => [1, 2],
         :file => UploadIO.new(__FILE__, "text/plain"),
-      )
+      ).to_form
 
       src = IO.read(__FILE__)
 
@@ -56,11 +56,11 @@ module Hurley
     end
 
     def test_build_multipart_with_nested_query
-      ctype, body = Query::Nested.response_body :a => {
+      ctype, body = Query::Nested.new(:a => {
         :num => 1,
         :arr => [1, 2],
         :file => UploadIO.new(__FILE__, "text/plain"),
-      }
+      }).to_form
 
       src = IO.read(__FILE__)
 
