@@ -1,5 +1,11 @@
+require "securerandom"
+
 module Hurley
   module Multipart
+    def self.boundary
+      "Hurley-#{SecureRandom.hex}"
+    end
+
     module Part #:nodoc:
       def self.new(boundary, name, value, header = nil)
         header ||= {}

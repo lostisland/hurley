@@ -22,27 +22,35 @@ module Hurley
       )
 
       src = IO.read(__FILE__)
-      assert_equal "multipart/form-data", ctype
-      expected = %(--#{Query::BOUNDARY}\r\n) +
+
+      boundary = nil
+      if ctype =~ %r{\Amultipart/form-data; boundary=(Hurley\-.*)}
+        boundary = $1
+      else
+        fail "bad ctype: #{ctype.inspect}"
+      end
+
+      assert_match %r{\Amultipart/form-data; boundary=Hurley\-}, ctype
+      expected = %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="a"\r\n) +
         %(\r\n1\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="array"\r\n) +
         %(\r\n1\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="array"\r\n) +
         %(\r\n2\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="file"; filename="multipart_test.rb"\r\n) +
         %(Content-Length: #{src.size}\r\n) +
         %(Content-Type: text/plain\r\n) +
         %(Content-Transfer-Encoding: binary\r\n) +
         %(\r\n#{src}\r\n) +
 
-        %(--#{Query::BOUNDARY}--\r\n\r\n)
+        %(--#{boundary}--\r\n\r\n)
 
       assert_equal expected, body.read.to_s
     end
@@ -55,27 +63,34 @@ module Hurley
       }
 
       src = IO.read(__FILE__)
-      assert_equal "multipart/form-data", ctype
-      expected = %(--#{Query::BOUNDARY}\r\n) +
+
+      boundary = nil
+      if ctype =~ %r{\Amultipart/form-data; boundary=(Hurley\-.*)}
+        boundary = $1
+      else
+        fail "bad ctype: #{ctype.inspect}"
+      end
+
+      expected = %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="a[num]"\r\n) +
         %(\r\n1\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="a[arr][]"\r\n) +
         %(\r\n1\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="a[arr][]"\r\n) +
         %(\r\n2\r\n) +
 
-        %(--#{Query::BOUNDARY}\r\n) +
+        %(--#{boundary}\r\n) +
         %(Content-Disposition: form-data; name="a[file]"; filename="multipart_test.rb"\r\n) +
         %(Content-Length: #{src.size}\r\n) +
         %(Content-Type: text/plain\r\n) +
         %(Content-Transfer-Encoding: binary\r\n) +
         %(\r\n#{src}\r\n) +
 
-        %(--#{Query::BOUNDARY}--\r\n\r\n)
+        %(--#{boundary}--\r\n\r\n)
 
       assert_equal expected, body.read.to_s
     end

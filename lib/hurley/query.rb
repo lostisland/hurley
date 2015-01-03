@@ -31,7 +31,8 @@ module Hurley
     def self.response_body(raw_query)
       query = raw_query === self ? raw_query : new(raw_query)
       if query.multipart?
-        return MULTIPART_TYPE, query.to_io
+        boundary = Multipart.boundary
+        return MULTIPART_TYPE % boundary, query.to_io(boundary)
       else
         return FORM_TYPE, StringIO.new(query.to_s)
       end
@@ -92,7 +93,7 @@ module Hurley
     def to_io(boundary = nil, part_headers = nil)
       parts = []
 
-      boundary ||= BOUNDARY
+      boundary ||= Multipart.boundary
       part_headers ||= {}
       build_pairs.each do |pair|
         parts << Multipart::Part.new(boundary, pair.key, pair.value, part_headers[pair.key])
@@ -173,7 +174,6 @@ module Hurley
     EMPTY_ESCAPED_BRACKET = "%5B%5D".freeze
     START_BRACKET = "[".freeze
     END_BRACKET = /\]\z/
-    BOUNDARY = "-----------Hurley-v#{Hurley::VERSION}"
 
     class Nested < self
       private
@@ -262,7 +262,7 @@ module Hurley
     end
 
     FORM_TYPE = "application/x-www-form-urlencoded".freeze
-    MULTIPART_TYPE = "multipart/form-data".freeze
+    MULTIPART_TYPE = "multipart/form-data; boundary=%s".freeze
     PARSERS = {
       :nested => Nested.method(:parse),
       :flat => Flat.method(:parse),
