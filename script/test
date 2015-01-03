@@ -22,7 +22,7 @@ set -e
 port=3999
 scheme=http
 
-if [ "$HURLEY_SSL" = "1" ]; then
+if [ "$HURLEY_SSL" = "1" ] || [ "$HURLEY_SSL" = "yes" ]; then
   scheme=https
   if [ -z "$HURLEY_SSL_KEY" ] || [ -z "$HURLEY_SSL_FILE" ]; then
     eval "$(script/generate_certs -s)"

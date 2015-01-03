@@ -1,0 +1,27 @@
+language: ruby
+install: script/bootstrap
+script: script/test
+rvm:
+  - 1.8.7
+  - 1.9.2
+  - 1.9.3
+  - 2.0.0
+  - 2.1
+  - jruby-18mode
+  - jruby-19mode
+  - jruby-head
+
+matrix:
+  allow_failures:
+    # "A fatal error has been detected by the Java Runtime Environment:
+    #  Internal Error (sharedRuntime.cpp:843)"
+    - rvm: jruby-18mode
+    - rvm: jruby-19mode
+    - rvm: jruby-head
+    # random crashes
+  fast_finish: true
+
+env:
+  matrix:
+    - HURLEY_SSL=no
+    - HURLEY_SSL=yes
