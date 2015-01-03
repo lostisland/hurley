@@ -41,6 +41,11 @@ module Hurley
         end
       end
 
+      put "/raw" do
+        body = env["rack.input"]
+        "raw #{request.env.fetch("CONTENT_TYPE") { "NONE" }} #{request.env.fetch("CONTENT_LENGTH") { -1 }} #{body.size}"
+      end
+
       get "/ssl" do
         request.secure?.to_s
       end

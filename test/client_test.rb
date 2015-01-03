@@ -67,6 +67,136 @@ module Hurley
       assert c.connection.all_run?
     end
 
+    def test_integration_default_headers
+      headers = [:content_type, :content_length, :transfer_encoding]
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |test|
+        [:get, :put, :post, :patch, :options, :delete].each do |verb|
+          test.send(verb, "/a") do |req|
+            body = if !req.body
+              :-
+            elsif req.body.respond_to?(:path)
+              req.body.path
+            else
+              req.body_io.read
+            end
+            [200, {}, headers.map { |h| req.header[h] || "NONE" }.join(",") + " #{body}"]
+          end
+        end
+      end
+
+      errors = []
+      tests = {}
+      file_size = File.size(__FILE__)
+
+      # IO-like object without #size/#length
+      fake_reader = Object.new
+      def fake_reader.read(*args)
+        "READ"
+      end
+
+      # test defaults with non-body requests
+      [:get, :patch, :options, :delete].each do |verb|
+        tests.update(
+          lambda {
+            c.send(verb, "a")
+          } => "NONE,NONE,NONE -",
+
+          lambda {
+            c.send(verb, "a") { |r| r.body ="ABC" }
+          } => "application/octet-stream,3,NONE ABC",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_type] = "text/plain"
+              r.body = "ABC"
+            end
+          } => "text/plain,3,NONE ABC",
+        )
+      end
+
+      # these http verbs need a body
+      [:post, :put].each do |verb|
+        tests.update(
+          # RAW BODY TESTS
+
+          lambda {
+            c.send(verb, "a")
+          } => "NONE,0,NONE -",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.body = "abc"
+            end
+          } => "application/octet-stream,3,NONE abc",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_type] = "text/plain"
+              r.body = "abc"
+            end
+          } => "text/plain,3,NONE abc",
+
+          # FILE TESTS
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.body = File.new(__FILE__)
+            end
+          } => "application/octet-stream,#{file_size},NONE #{__FILE__}",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_type] = "text/plain"
+              r.body = File.new(__FILE__)
+            end
+          } => "text/plain,#{file_size},NONE #{__FILE__}",
+
+          # GENERIC IO TESTS
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.body = fake_reader
+            end
+          } => "application/octet-stream,NONE,chunked READ",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_type] = "text/plain"
+              r.body = fake_reader
+            end
+          } => "text/plain,NONE,chunked READ",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_length] = 4
+              r.body = fake_reader
+            end
+          } => "application/octet-stream,4,NONE READ",
+
+          lambda {
+            c.send(verb, "a") do |r|
+              r.header[:content_length] = 4
+              r.header[:content_type] = "text/plain"
+              r.body = fake_reader
+            end
+          } => "text/plain,4,NONE READ",
+        )
+      end
+
+      tests.each do |req_block, expected|
+        res = req_block.call
+        req = res.request
+        if expected != res.body
+          errors << "#{req.inspect} Expected #{expected.inspect}; Got #{res.body.inspect}"
+        end
+      end
+
+      if errors.any?
+        fail "\n" + errors.join("\n")
+      end
+    end
+
     def test_parses_endpoint
       c = Client.new "https://example.com/a?a=1"
       assert_equal "https", c.scheme

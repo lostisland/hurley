@@ -1,4 +1,5 @@
 require "forwardable"
+require "set"
 require "stringio"
 
 module Hurley
@@ -81,6 +82,7 @@ module Hurley
         request.header[:authorization] = value
       end
 
+      request.prepare!
       response = connection.call(request)
 
       @after_callbacks.each { |cb| cb.call(response) }
@@ -123,6 +125,8 @@ module Hurley
     end
 
     def body_io
+      return unless body
+
       if body.respond_to?(:read)
         body
       elsif body
@@ -142,11 +146,36 @@ module Hurley
       ]
     end
 
+    def prepare!
+      if body
+        header[:content_type] ||= DEFAULT_TYPE
+      else
+        return unless REQUIRED_BODY_VERBS.include?(verb)
+      end
+
+      if !header.key?(:content_length) && header[:transfer_encoding] != CHUNKED
+        if body
+          if sizer = SIZE_METHODS.detect { |method| body.respond_to?(method) }
+            header[:content_length] = body.send(sizer).to_i
+          else
+            header[:transfer_encoding] = CHUNKED
+          end
+        else
+          header[:content_length] = 0
+        end
+      end
+    end
+
     private
 
     def body_receiver
       @body_receiver ||= [nil, BodyReceiver.new]
     end
+
+    DEFAULT_TYPE = "application/octet-stream".freeze
+    CHUNKED = "chunked".freeze
+    REQUIRED_BODY_VERBS = Set.new([:put, :post])
+    SIZE_METHODS = [:bytesize, :length, :size]
   end
 
   class Response

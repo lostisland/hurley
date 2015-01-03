@@ -47,7 +47,11 @@ module Hurley
         request.url.request_uri,  # request uri path
         request.header,           # request headers
       )
-      http_req.body_stream = request.body_io
+
+      if body = request.body_io
+        http_req.body_stream = body
+      end
+
       http_req
     end
 

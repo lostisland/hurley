@@ -55,7 +55,6 @@ module Hurley
           res = client.post "echo" do |req|
             req.body = "name=zack"
             req.header[:content_type] = "application/x-www-form-urlencoded"
-            req.header[:content_length] = 9
           end
           assert_equal %(post {"name"=>"zack"}), res.body
         end
@@ -64,35 +63,52 @@ module Hurley
           res = client.post "echo" do |req|
             req.body = "name[first]=zack"
             req.header[:content_type] = "application/x-www-form-urlencoded"
-            req.header[:content_length] = 16
           end
           assert_equal %(post {"name"=>{"first"=>"zack"}}), res.body
         end
 
         def test_POST_retrieves_the_response_headers
-          res = client.post("echo") do |req|
-            req.header[:content_length] = 0
-          end
-          assert_match(/text\/plain/, res.header[:content_type])
+          assert_match(/text\/plain/, client.post("echo").header[:content_type])
         end
 
-        def test_POST_sends_files
+        def test_POST_sends_files_as_multipart
           resp = client.post("file") do |req|
             ctype, body = Query::Flat.new(
               :uploaded_file => UploadIO.new(__FILE__, "text/x-ruby"),
             ).to_form
             req.header[:content_type] = ctype
-            req.header[:content_length] = body.length
             req.body = body
           end
           assert_equal "file integration.rb text/x-ruby #{File.size(__FILE__)}", resp.body
+        end
+
+        def test_PUT_sends_files
+          resp = client.put("raw") do |req|
+            req.header[:content_length] = File.size(__FILE__)
+            req.body = File.open(__FILE__)
+          end
+          assert_equal "raw application/octet-stream #{File.size(__FILE__)} #{File.size(__FILE__)}", resp.body
+        end
+
+        def test_PUT_sends_io
+          resp = client.put("raw") do |req|
+            req.body = GenericIO.new("READ")
+            req.header[:content_length] = 4
+          end
+          assert_equal "raw application/octet-stream 4 4", resp.body
+        end
+
+        def test_PUT_sends_io_with_chunked_encoding
+          resp = client.put("raw") do |req|
+            req.body = GenericIO.new("READ")
+          end
+          assert_equal "raw application/octet-stream -1 4", resp.body
         end
 
         def test_PUT_send_url_encoded_params
           res = client.put "echo" do |req|
             req.body = "name=zack"
             req.header[:content_type] = "application/x-www-form-urlencoded"
-            req.header[:content_length] = 9
           end
           assert_equal %(put {"name"=>"zack"}), res.body
         end
@@ -101,22 +117,18 @@ module Hurley
           res = client.put "echo" do |req|
             req.body = "name[first]=zack"
             req.header[:content_type] = "application/x-www-form-urlencoded"
-            req.header[:content_length] = 16
           end
           assert_equal %(put {"name"=>{"first"=>"zack"}}), res.body
         end
 
         def test_PUT_retrieves_the_response_headers
-          res = client.put("echo") do |req|
-            req.header[:content_length] = 0
-          end
-          assert_match(/text\/plain/, res.header[:content_type])
+          assert_match(/text\/plain/, client.put("echo").header[:content_type])
         end
 
         def test_PATCH_send_url_encoded_params
           res = client.patch "echo" do |req|
+            req.header[:content_type] = "application/x-www-form-urlencoded"
             req.body = "name=zack"
-            req.header[:content_length] = 9
           end
           assert_equal %(patch {"name"=>"zack"}), res.body
         end
@@ -181,6 +193,16 @@ module Hurley
           end
 
           assert_includes err.message, "certificate"
+        end
+      end
+
+      class GenericIO
+        def initialize(str)
+          @io = StringIO.new(str)
+        end
+
+        def read(*args)
+          @io.read(*args)
         end
       end
     end

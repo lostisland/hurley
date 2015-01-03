@@ -21,6 +21,10 @@ module Hurley
       handle(:post, url, &Proc.new)
     end
 
+    def patch(url)
+      handle(:patch, url, &Proc.new)
+    end
+
     def delete(url)
       handle(:delete, url, &Proc.new)
     end
