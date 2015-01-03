@@ -151,6 +151,7 @@ module Hurley
     end
 
     def query_class=(new_query)
+      @query = nil
       @query_class = new_query
     end
 

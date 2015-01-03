@@ -33,14 +33,16 @@ module Hurley
       @connection ||= Hurley.default_connection
     end
 
-    def head(path)
+    def head(path, query = nil)
       req = request(:head, path)
+      req.query.update(query) if query
       yield req if block_given?
       call(req)
     end
 
-    def get(path)
+    def get(path, query = nil)
       req = request(:get, path)
+      req.query.update(query) if query
       yield req if block_given?
       call(req)
     end
@@ -63,14 +65,16 @@ module Hurley
       call(req)
     end
 
-    def delete(path)
+    def delete(path, query = nil)
       req = request(:delete, path)
+      req.query.update(query) if query
       yield req if block_given?
       call(req)
     end
 
-    def options(path)
+    def options(path, query = nil)
       req = request(:options, path)
+      req.query.update(query) if query
       yield req if block_given?
       call(req)
     end

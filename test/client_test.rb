@@ -197,6 +197,36 @@ module Hurley
       end
     end
 
+    def test_request_with_query
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |test|
+        [:get, :options, :delete].each do |verb|
+          test.send(verb, "/a") do |req|
+            [200, {}, req.url.to_s]
+          end
+        end
+      end
+
+      errors = []
+      prefix = "https://example.com/a"
+
+      {
+        nil => prefix,
+        {:foo => :bar} => "#{prefix}?foo=bar",
+      }.each do |input, expected|
+        [:get, :options, :delete].each do |verb|
+          res = c.send(verb, "a", input)
+          if res.body != expected
+            errors << "#{res.request.url.inspect} => #{expected.inspect} != #{res.body.inspect}"
+          end
+        end
+      end
+
+      if errors.any?
+        fail "\n" + errors.join("\n")
+      end
+    end
+
     def test_parses_endpoint
       c = Client.new "https://example.com/a?a=1"
       assert_equal "https", c.scheme

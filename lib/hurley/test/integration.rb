@@ -32,7 +32,7 @@ module Hurley
         end
 
         def test_GET_send_url_encoded_params
-          assert_equal %(get ?{"name"=>"zack"}), client.get("echo?name=zack").body
+          assert_equal %(get ?{"name"=>"zack"}), client.get("echo", :name => :zack).body
         end
 
         def test_GET_retrieves_the_response_headers
@@ -43,7 +43,7 @@ module Hurley
         end
 
         def test_GET_sends_user_agent
-          assert_equal Hurley::USER_AGENT, client.get("echo_header?name=user-agent").body
+          assert_equal Hurley::USER_AGENT, client.get("echo_header", :name => :user_agent).body
         end
 
         def test_GET_ssl
@@ -179,7 +179,7 @@ module Hurley
 
       module Compression
         def test_GET_handles_compression
-          res = client.get("echo_header?name=accept-encoding")
+          res = client.get("echo_header", :name => :accept_encoding)
           assert_match(/gzip;.+\bdeflate\b/, res.body)
         end
       end
