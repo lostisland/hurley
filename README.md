@@ -49,9 +49,10 @@ end
 
 ## TODO
 
-* [ ] logging
-* [ ] multipart posts
 * [ ] redirections
+* [ ] addressable uri support
+* [ ] canonical header names
+* [ ] request options (timeouts)
 
 ## NOT TODO
 
