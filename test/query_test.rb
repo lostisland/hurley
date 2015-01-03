@@ -49,7 +49,7 @@ module Hurley
       q = Query::Nested.new
       q["a"] = 1
       q["a+b"] = %w(1+1 2+2 3+3)
-      assert_equal "a=1&a%2Bb[]=1%2B1&a%2Bb[]=2%2B2&a%2Bb[]=3%2B3", q.to_s
+      assert_query "a=1&a%2Bb[]=1%2B1&a%2Bb[]=2%2B2&a%2Bb[]=3%2B3", q.to_s
 
       q2 = Query::Nested.parse(q.to_s)
       assert_equal %w(a a+b), q2.keys
@@ -73,7 +73,7 @@ module Hurley
       q = Query::Nested.new
       q["a"] = 1
       q["a+b"] = {"1+1" => "a+a", "2+2" => "b+b"}
-      assert_equal "a=1&a%2Bb[1%2B1]=a%2Ba&a%2Bb[2%2B2]=b%2Bb", q.to_s
+      assert_query "a=1&a%2Bb[1%2B1]=a%2Ba&a%2Bb[2%2B2]=b%2Bb", q.to_s
 
       q2 = Query::Nested.parse(q.to_s)
       assert_equal %w(a a+b), q2.keys
@@ -94,7 +94,7 @@ module Hurley
         "b+wat" => "b"
       }
 
-      assert_equal "a=1&a%2B1[b%2B2][c%2B3]=d%2B4&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
+      assert_query "a=1&a%2B1[b%2B2][c%2B3]=d%2B4&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
       q2 = Query::Nested.parse(q.to_s)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
@@ -117,7 +117,7 @@ module Hurley
         "b+wat" => "b"
       }
 
-      assert_equal "a=1&a%2B1[b%2B2][c%2B3][]=d%2B4&a%2B1[b%2B2][c%2B3][]=d&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
+      assert_query "a=1&a%2B1[b%2B2][c%2B3][]=d%2B4&a%2B1[b%2B2][c%2B3][]=d&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
       q2 = Query::Nested.parse(q.to_s)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
@@ -142,7 +142,7 @@ module Hurley
         }
       ]
 
-      assert_equal "a=1&a%2B1[][b%2B2][c%2B3][][d%2B4][]=e&a%2B1[][b%2B2][c%2B3][][d%2B4][]=5", q.to_s
+      assert_query "a=1&a%2B1[][b%2B2][c%2B3][][d%2B4][]=e&a%2B1[][b%2B2][c%2B3][][d%2B4][]=5", q.to_s
       q2 = Query::Nested.parse(q.to_s)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
@@ -179,6 +179,11 @@ module Hurley
     def test_parse_hash_value_in_flat_query
       q = Query::Flat.parse("a=1&a%2Ba[1%2B1]=a%2Ba&a%2Ba[2%2B2]=b%2Bb")
       assert_equal %w(a a+a[1+1] a+a[2+2]), q.keys
+    end
+
+    def assert_query(expected, actual)
+      expected.gsub! /\[|\]/, "[" => "%5B", "]" => "%5D"
+      assert_equal expected, actual
     end
   end
 end
