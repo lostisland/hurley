@@ -197,7 +197,7 @@ module Hurley
       end
     end
 
-    def test_request_with_query
+    def test_integration_with_query
       c = Client.new "https://example.com"
       c.connection = Test.new do |test|
         [:get, :options, :delete].each do |verb|
@@ -227,7 +227,7 @@ module Hurley
       end
     end
 
-    def test_request_with_body
+    def test_integration_with_body
       c = Client.new "https://example.com"
       c.connection = Test.new do |test|
         [:post, :put, :patch].each do |verb|
