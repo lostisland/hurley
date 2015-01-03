@@ -53,7 +53,7 @@ module Hurley
       any_multipart?(@hash.values)
     end
 
-    def to_s
+    def to_query_string
       build_pairs.map!(&:to_s).join(AMP)
     end
 
@@ -62,9 +62,11 @@ module Hurley
         boundary = Multipart.boundary
         return MULTIPART_TYPE % boundary, to_io(boundary)
       else
-        return FORM_TYPE, StringIO.new(to_s)
+        return FORM_TYPE, StringIO.new(to_query_string)
       end
     end
+
+    alias to_s to_query_string
 
     def inspect
       "#<%s %s>" % [

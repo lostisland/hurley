@@ -12,9 +12,9 @@ module Hurley
       assert_equal "1+2", q["a+b"]
       assert q.key?("a+b")
 
-      assert_equal "a=1&a%2Bb=1%2B2", q.to_s
+      assert_equal "a=1&a%2Bb=1%2B2", q.to_query_string
 
-      q2 = Query.parse(q.to_s)
+      q2 = Query.parse(q.to_query_string)
       assert_equal %w(a a+b), q2.keys
       assert_equal "1", q2["a"]
       assert_equal "1+2", q2["a+b"]
@@ -29,9 +29,9 @@ module Hurley
       assert_nil q["a+b"]
       assert q.key?("a+b")
 
-      assert_equal "a=1&a%2Bb", q.to_s
+      assert_equal "a=1&a%2Bb", q.to_query_string
 
-      q2 = Query.parse(q.to_s)
+      q2 = Query.parse(q.to_query_string)
       assert_equal %w(a a+b), q2.keys
       assert_equal "1", q2["a"]
       assert_nil q2["a+b"]
@@ -40,18 +40,18 @@ module Hurley
     def test_delete_value
       q = Query::Nested.new
       q["a+b"] = "1+2"
-      assert_equal "a%2Bb=1%2B2", q.to_s
+      assert_equal "a%2Bb=1%2B2", q.to_query_string
       q.delete "a+b"
-      assert_equal "", q.to_s
+      assert_equal "", q.to_query_string
     end
 
     def test_encode_and_parse_array_value_in_nested_query
       q = Query::Nested.new
       q["a"] = 1
       q["a+b"] = %w(1+1 2+2 3+3)
-      assert_query "a=1&a%2Bb[]=1%2B1&a%2Bb[]=2%2B2&a%2Bb[]=3%2B3", q.to_s
+      assert_query "a=1&a%2Bb[]=1%2B1&a%2Bb[]=2%2B2&a%2Bb[]=3%2B3", q.to_query_string
 
-      q2 = Query::Nested.parse(q.to_s)
+      q2 = Query::Nested.parse(q.to_query_string)
       assert_equal %w(a a+b), q2.keys
       assert_equal "1", q2["a"]
       assert_equal %w(1+1 2+2 3+3), q2["a+b"]
@@ -61,9 +61,9 @@ module Hurley
       q = Query::Flat.new
       q["a"] = 1
       q["a+b"] = %w(1+1 2+2 3+3)
-      assert_equal "a=1&a%2Bb=1%2B1&a%2Bb=2%2B2&a%2Bb=3%2B3", q.to_s
+      assert_equal "a=1&a%2Bb=1%2B1&a%2Bb=2%2B2&a%2Bb=3%2B3", q.to_query_string
 
-      q2 = Query::Flat.parse(q.to_s)
+      q2 = Query::Flat.parse(q.to_query_string)
       assert_equal %w(a a+b), q2.keys
       assert_equal "1", q2["a"]
       assert_equal %w(1+1 2+2 3+3), q2["a+b"]
@@ -73,9 +73,9 @@ module Hurley
       q = Query::Nested.new
       q["a"] = 1
       q["a+b"] = {"1+1" => "a+a", "2+2" => "b+b"}
-      assert_query "a=1&a%2Bb[1%2B1]=a%2Ba&a%2Bb[2%2B2]=b%2Bb", q.to_s
+      assert_query "a=1&a%2Bb[1%2B1]=a%2Ba&a%2Bb[2%2B2]=b%2Bb", q.to_query_string
 
-      q2 = Query::Nested.parse(q.to_s)
+      q2 = Query::Nested.parse(q.to_query_string)
       assert_equal %w(a a+b), q2.keys
       assert_equal "1", q2["a"]
       assert_equal %w(1+1 2+2), q2["a+b"].keys
@@ -94,8 +94,8 @@ module Hurley
         "b+wat" => "b"
       }
 
-      assert_query "a=1&a%2B1[b%2B2][c%2B3]=d%2B4&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
-      q2 = Query::Nested.parse(q.to_s)
+      assert_query "a=1&a%2B1[b%2B2][c%2B3]=d%2B4&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_query_string
+      q2 = Query::Nested.parse(q.to_query_string)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
 
@@ -117,8 +117,8 @@ module Hurley
         "b+wat" => "b"
       }
 
-      assert_query "a=1&a%2B1[b%2B2][c%2B3][]=d%2B4&a%2B1[b%2B2][c%2B3][]=d&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_s
-      q2 = Query::Nested.parse(q.to_s)
+      assert_query "a=1&a%2B1[b%2B2][c%2B3][]=d%2B4&a%2B1[b%2B2][c%2B3][]=d&a%2B1[b%2B2][c%2Bwat]=c&a%2B1[b%2Bwat]=b", q.to_query_string
+      q2 = Query::Nested.parse(q.to_query_string)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
 
@@ -142,8 +142,8 @@ module Hurley
         }
       ]
 
-      assert_query "a=1&a%2B1[][b%2B2][c%2B3][][d%2B4][]=e&a%2B1[][b%2B2][c%2B3][][d%2B4][]=5", q.to_s
-      q2 = Query::Nested.parse(q.to_s)
+      assert_query "a=1&a%2B1[][b%2B2][c%2B3][][d%2B4][]=e&a%2B1[][b%2B2][c%2B3][][d%2B4][]=5", q.to_query_string
+      q2 = Query::Nested.parse(q.to_query_string)
       assert_equal %w(a a+1), q2.keys
       assert_equal "1", q2["a"]
 
@@ -172,7 +172,7 @@ module Hurley
       q = Query::Flat.new
       q["a"] = {1 => "a", 2 => "b"}
       assert_raises NotImplementedError do
-        q.to_s
+        q.to_query_string
       end
     end
 

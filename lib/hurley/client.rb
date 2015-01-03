@@ -118,6 +118,10 @@ module Hurley
       url.query
     end
 
+    def query_string
+      url.query.to_query_string
+    end
+
     def body_io
       if body.respond_to?(:read)
         body

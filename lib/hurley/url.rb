@@ -116,7 +116,7 @@ module Hurley
       req_path = path
       req_path = SLASH if req_path.empty?
 
-      if (q = query.to_s).empty?
+      if (q = query.to_query_string).empty?
         req_path
       else
         "#{req_path}?#{q}"
@@ -124,7 +124,7 @@ module Hurley
     end
 
     def to_s
-      if (q = query.to_s).empty?
+      if (q = query.to_query_string).empty?
         @parsed.query = nil
       else
         @parsed.query = q
