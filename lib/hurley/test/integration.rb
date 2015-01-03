@@ -76,6 +76,18 @@ module Hurley
           assert_match(/text\/plain/, res.header[:content_type])
         end
 
+        def test_POST_sends_files
+          resp = client.post("file") do |req|
+            ctype, body = Query::Flat.response_body(
+              :uploaded_file => UploadIO.new(__FILE__, "text/x-ruby"),
+            )
+            req.header[:content_type] = ctype
+            req.header[:content_length] = body.length
+            req.body = body
+          end
+          assert_equal "file integration.rb text/x-ruby #{File.size(__FILE__)}", resp.body
+        end
+
         def test_PUT_send_url_encoded_params
           res = client.put "echo" do |req|
             req.body = "name=zack"

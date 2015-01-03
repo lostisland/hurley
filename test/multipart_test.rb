@@ -18,7 +18,7 @@ module Hurley
       ctype, body = Query::Flat.response_body(
         :a => 1,
         :array => [1, 2],
-        :file => Multipart::UploadIO.new(__FILE__, "text/plain"),
+        :file => UploadIO.new(__FILE__, "text/plain"),
       )
 
       src = IO.read(__FILE__)
@@ -51,7 +51,7 @@ module Hurley
       ctype, body = Query::Nested.response_body :a => {
         :num => 1,
         :arr => [1, 2],
-        :file => Multipart::UploadIO.new(__FILE__, "text/plain"),
+        :file => UploadIO.new(__FILE__, "text/plain"),
       }
 
       src = IO.read(__FILE__)
@@ -106,7 +106,7 @@ module Hurley
   class FilePartTest < TestCase
     def test_build_without_options
       src = IO.read(__FILE__)
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
 
       part = Multipart::Part.new("boundary", "foo", io, {})
 
@@ -123,7 +123,7 @@ module Hurley
 
     def test_build_with_content_type
       src = IO.read(__FILE__)
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
 
       part = Multipart::Part.new("boundary", "foo", io,
         :content_type => "text/ruby")
@@ -141,7 +141,7 @@ module Hurley
 
     def test_build_with_content_disposition
       src = IO.read(__FILE__)
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
 
       part = Multipart::Part.new("boundary", "foo", io,
         :content_disposition => "attachment")
@@ -159,7 +159,7 @@ module Hurley
 
     def test_build_with_content_transfer_encoding
       src = IO.read(__FILE__)
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
 
       part = Multipart::Part.new("boundary", "foo", io,
         :content_transfer_encoding => "rofl")
@@ -177,7 +177,7 @@ module Hurley
 
     def test_build_with_content_id
       src = IO.read(__FILE__)
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
 
       part = Multipart::Part.new("boundary", "foo", io,
         :content_id => "abc123")
@@ -197,12 +197,12 @@ module Hurley
 
   class CompositeReadIOTest < TestCase
     def test_read_all
-      io = Multipart::CompositeReadIO.new StringIO.new("one"), StringIO.new("two")
+      io = CompositeReadIO.new StringIO.new("one"), StringIO.new("two")
       assert_equal "onetwo", io.read
     end
 
     def test_read_chunks
-      io = Multipart::CompositeReadIO.new StringIO.new("one"), StringIO.new("two")
+      io = CompositeReadIO.new StringIO.new("one"), StringIO.new("two")
       assert_equal "on", io.read(2)
       assert_equal "et", io.read(2)
       assert_equal "wo", io.read(2)
@@ -225,7 +225,7 @@ module Hurley
 
   class UploadIOTest < TestCase
     def test_with_filename_and_no_custom_filename
-      io = Multipart::UploadIO.new(__FILE__, "text/plain")
+      io = UploadIO.new(__FILE__, "text/plain")
       assert_equal "text/plain", io.content_type
       assert_equal "multipart_test.rb", io.original_filename
       assert_equal __FILE__, io.local_path
@@ -234,7 +234,7 @@ module Hurley
     end
 
     def test_with_filename_and_custom_filename
-      io = Multipart::UploadIO.new(__FILE__, "text/plain", "wat.rb")
+      io = UploadIO.new(__FILE__, "text/plain", "wat.rb")
       assert_equal "text/plain", io.content_type
       assert_equal "wat.rb", io.original_filename
       assert_equal __FILE__, io.local_path
@@ -243,7 +243,7 @@ module Hurley
     end
 
     def test_with_file_io_and_no_custom_filename
-      io = Multipart::UploadIO.new(File.new(__FILE__), "text/plain")
+      io = UploadIO.new(File.new(__FILE__), "text/plain")
       assert_equal "text/plain", io.content_type
       assert_equal "multipart_test.rb", io.original_filename
       assert_equal __FILE__, io.local_path
@@ -252,7 +252,7 @@ module Hurley
     end
 
     def test_with_file_io_and_custom_filename
-      io = Multipart::UploadIO.new(File.new(__FILE__), "text/plain", "wat.rb")
+      io = UploadIO.new(File.new(__FILE__), "text/plain", "wat.rb")
       assert_equal "text/plain", io.content_type
       assert_equal "wat.rb", io.original_filename
       assert_equal __FILE__, io.local_path
@@ -262,7 +262,7 @@ module Hurley
 
     def test_with_io_and_no_custom_filename
       stringio = StringIO.new(IO.read(__FILE__))
-      io = Multipart::UploadIO.new(stringio, "text/plain")
+      io = UploadIO.new(stringio, "text/plain")
       assert_equal "text/plain", io.content_type
       assert_equal "local.path", io.original_filename
       assert_equal "local.path", io.local_path
@@ -272,7 +272,7 @@ module Hurley
 
     def test_with_io_and_custom_filename
       stringio = StringIO.new(IO.read(__FILE__))
-      io = Multipart::UploadIO.new(stringio, "text/plain", "wat.rb")
+      io = UploadIO.new(stringio, "text/plain", "wat.rb")
       assert_equal "text/plain", io.content_type
       assert_equal "wat.rb", io.original_filename
       assert_equal "local.path", io.local_path

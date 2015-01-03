@@ -98,8 +98,14 @@ module Hurley
         parts << Multipart::Part.new(boundary, pair.key, pair.value, part_headers[pair.key])
       end
       parts << Multipart::EpiloguePart.new(boundary)
+      ios = []
+      len = 0
+      parts.each do |part|
+        len += part.length
+        ios << part.to_io
+      end
 
-      Multipart::CompositeReadIO.new(parts.map!(&:to_io))
+      CompositeReadIO.new(len, *ios)
     end
 
     def to_s
