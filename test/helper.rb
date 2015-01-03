@@ -1,4 +1,5 @@
 require "minitest/autorun"
+require "rack"
 require File.expand_path("../../lib/hurley", __FILE__)
 Hurley.require_lib "test", "test/integration"
 

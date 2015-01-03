@@ -227,6 +227,76 @@ module Hurley
       end
     end
 
+    def test_request_with_body
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |test|
+        [:post, :put, :patch].each do |verb|
+          test.send(verb, "/form") do |req|
+            [200, {}, "#{req.header[:content_type]}:#{req.body_io.read}"]
+          end
+        end
+
+        [:post, :put, :patch].each do |verb|
+          test.send(verb, "/multipart") do |req|
+            m = Rack::Multipart.parse_multipart(
+              "CONTENT_TYPE" => req.header[:content_type],
+              "CONTENT_LENGTH" => req.header[:content_length],
+              "rack.input" => req.body_io,
+            )
+            [200, {}, "#{req.header[:content_type]}:#{Array(m["a"]).join(",")}:#{m["h"].inspect}:#{m["file"][:tempfile].read}"]
+          end
+        end
+      end
+
+      errors = []
+
+      flat_query = Query::Flat.new :a => [1,2]
+      nested_query = Query::Nested.new :a => [1,2]
+
+      {
+        ["abc"] => "application/octet-stream:abc",
+        ["abc", "text/plain"] => "text/plain:abc",
+        [{:a => 1}] => "application/x-www-form-urlencoded:a=1",
+        [flat_query] => "application/x-www-form-urlencoded:a=1&a=2",
+        [nested_query] => "application/x-www-form-urlencoded:a%5B%5D=1&a%5B%5D=2",
+        [flat_query, :form] => "form:a=1&a=2",
+        [nested_query, :form] => "form:a%5B%5D=1&a%5B%5D=2",
+      }.each do |args, expected|
+        [:post, :put, :patch].each do |verb|
+          res = c.send(verb, "form", *args)
+          if res.body != expected
+            errors << "#{verb} => #{expected.inspect} != #{res.body.inspect}"
+          end
+        end
+      end
+
+      multipart_tests = {}
+      [:post, :put, :patch].each do |verb|
+        nested_query = Query::Nested.new(:file => UploadIO.new(StringIO.new("ABC"), "text/plain"), :a => [1,2], :h => {:a => 1})
+        flat_query = Query::Flat.new(:file => UploadIO.new(StringIO.new("ABC"), "text/plain"), :a => [3,4], :h => 0)
+        hash_query = {:file => UploadIO.new(StringIO.new("ABC"), "text/plain"), :a => [5,6], :h => {:a => 1}}
+        multipart_tests.update(
+          c.send(verb, "multipart", nested_query) => %(:1,2:{"a"=>"1"}:ABC),
+          c.send(verb, "multipart", flat_query) => %(:4:"0":ABC),
+          c.send(verb, "multipart", hash_query) => %(:5,6:{"a"=>"1"}:ABC),
+        )
+      end
+
+      multipart_tests.each do |res, expected|
+        if res.body !~ %r{\Amultipart/form-data; boundary=Hurley-(\w+):}
+          errors << "#{res.request.verb} multipart (#{expected[1..-1]}) bad type: #{res.body}"
+        end
+
+        if !res.body.end_with?(expected)
+          errors << "#{res.request.verb} multipart (#{expected[1..-1]}) bad body: #{res.body}"
+        end
+      end
+
+      if errors.any?
+        fail "\n" + errors.join("\n")
+      end
+    end
+
     def test_parses_endpoint
       c = Client.new "https://example.com/a?a=1"
       assert_equal "https", c.scheme

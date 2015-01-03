@@ -47,20 +47,26 @@ module Hurley
       call(req)
     end
 
-    def patch(path)
+    def patch(path, body = nil, ctype = nil)
       req = request(:patch, path)
+      req.body = body if body
+      req.header[:content_type] = ctype if ctype
       yield req if block_given?
       call(req)
     end
 
-    def put(path)
+    def put(path, body = nil, ctype = nil)
       req = request(:put, path)
+      req.body = body if body
+      req.header[:content_type] = ctype if ctype
       yield req if block_given?
       call(req)
     end
 
-    def post(path)
+    def post(path, body = nil, ctype = nil)
       req = request(:post, path)
+      req.body = body if body
+      req.header[:content_type] = ctype if ctype
       yield req if block_given?
       call(req)
     end
@@ -81,10 +87,6 @@ module Hurley
 
     def call(request)
       @before_callbacks.each { |cb| cb.call(request) }
-
-      if value = !request.header[:authorization] && request.url.basic_auth
-        request.header[:authorization] = value
-      end
 
       request.prepare!
       response = connection.call(request)
@@ -151,8 +153,21 @@ module Hurley
     end
 
     def prepare!
+      if value = !header[:authorization] && url.basic_auth
+        header[:authorization] = value
+      end
+
       if body
-        header[:content_type] ||= DEFAULT_TYPE
+        ctype = nil
+        case body
+        when Query
+          ctype, io = body.to_form
+          self.body = io
+        when Hash
+          ctype, io = Query.default.new(body).to_form
+          self.body = io
+        end
+        header[:content_type] ||= ctype || DEFAULT_TYPE
       else
         return unless REQUIRED_BODY_VERBS.include?(verb)
       end
