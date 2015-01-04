@@ -1,3 +1,5 @@
+# Enables Addressable::URI support in Hurley
+
 require "addressable/uri"
 
 module Hurley

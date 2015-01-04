@@ -133,16 +133,20 @@ module Hurley
   end
 
   class Request < Struct.new(:verb, :url, :header, :body, :options, :ssl_options)
+    extend Forwardable
+    def_delegators(:url,
+    :query,
+    :scheme, :scheme=,
+    :host, :host=,
+    :port, :port=,
+    )
+
     def options
       self[:options] ||= RequestOptions.new
     end
 
     def ssl_options
       self[:ssl_options] ||= SslOptions.new
-    end
-
-    def query
-      url.query
     end
 
     def query_string
