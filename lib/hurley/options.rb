@@ -19,10 +19,18 @@ module Hurley
     # Hurley::Url instance of an HTTP Proxy address.
     :proxy,
 
+    # Integer limit on the number of redirects that are automatically followed.
+    # Default: 10
+    :redirection_limit,
+
     # Hurley::Query subclass to use for query objects.  Defaults to
     # Hurley::Query.default.
     :query_class,
   )
+
+    def redirection_limit
+      self[:redirection_limit] ||= 10
+    end
 
     def bind=(b)
       self[:bind] = SocketBinding.parse(b)

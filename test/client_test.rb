@@ -301,6 +301,7 @@ module Hurley
       statuses = [301, 302, 303]
 
       c = Client.new "http://example.com?o=1"
+      c.request_options.redirection_limit = 0
       c.connection = Test.new do |t|
         statuses.each do |st|
           t.get "/#{st}/host/2" do |req|
@@ -364,6 +365,7 @@ module Hurley
       statuses = [307, 308]
 
       c = Client.new "http://example.com?o=1"
+      c.request_options.redirection_limit = 0
       c.connection = Test.new do |t|
         statuses.each do |st|
           t.post "/#{st}/host/2" do |req|
@@ -421,6 +423,41 @@ module Hurley
           assert_equal 200, res.status_code
         end
       end
+    end
+
+    def test_integration_automatic_redirection
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |t|
+        1.upto(5) do |i|
+          t.get "/#{i}" do |req|
+            [301, {"Location" => "/#{i - 1}"}, i.to_s]
+          end
+        end
+
+        t.get "/0" do |req|
+          [200, {}, "ok"]
+        end
+      end
+
+      res = c.get("/5") { |r| r.options.redirection_limit = 10 }
+      assert_equal "ok", res.body
+      assert_equal [
+        "https://example.com/5",
+        "https://example.com/4",
+        "https://example.com/3",
+        "https://example.com/2",
+        "https://example.com/1",
+      ], res.via.map { |r| r.url.to_s }
+      assert_equal "https://example.com/0", res.request.url.to_s
+
+      res = c.get("/5") { |r| r.options.redirection_limit = 3 }
+      assert_equal "2", res.body
+      assert_equal [
+        "https://example.com/5",
+        "https://example.com/4",
+        "https://example.com/3",
+        ], res.via.map { |r| r.url.to_s }
+        assert_equal "https://example.com/2", res.request.url.to_s
     end
 
     def test_parses_endpoint

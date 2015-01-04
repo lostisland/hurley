@@ -88,14 +88,7 @@ module Hurley
     end
 
     def call(request)
-      @before_callbacks.each { |cb| cb.call(request) }
-
-      request.prepare!
-      response = connection.call(request)
-
-      @after_callbacks.each { |cb| cb.call(response) }
-
-      response
+      call_with_redirects(request, [])
     end
 
     def before_call(name = nil)
@@ -112,6 +105,24 @@ module Hurley
 
     def request(method, path)
       Request.new(method, Url.join(@url, path), @header.dup, nil, @request_options.dup, @ssl_options.dup)
+    end
+
+    private
+
+    def call_with_redirects(request, via)
+      @before_callbacks.each { |cb| cb.call(request) }
+
+      request.prepare!
+      response = connection.call(request)
+
+      @after_callbacks.each { |cb| cb.call(response) }
+
+      if response.automatically_redirect?(via)
+        return call_with_redirects(response.location, via << request)
+      end
+
+      response.via = via
+      response
     end
   end
 
@@ -204,6 +215,7 @@ module Hurley
     attr_reader :header
     attr_accessor :body
     attr_accessor :status_code
+    attr_writer :via
 
     def initialize(request, status_code = nil, header = nil)
       @request = request
@@ -220,12 +232,26 @@ module Hurley
       end
     end
 
+    def via
+      @via ||= []
+    end
+
     def location
       @location ||= begin
         return unless loc = @header[:location]
         verb = STATUS_FORCE_GET.include?(status_code) ? :get : request.verb
         Request.new(verb, request.url.join(Url.parse(loc)), request.header, request.body, request.options, request.ssl_options)
       end
+    end
+
+    def redirect?
+      STATUS_REDIRECTION.include?(status_code)
+    end
+
+    def automatically_redirect?(previous_requests = nil)
+      return false unless redirect?
+      limit = request.options.redirection_limit.to_i
+      limit > 0 && Array(previous_requests).size < limit
     end
 
     def receive_body(chunk)
@@ -256,6 +282,7 @@ module Hurley
     end
 
     STATUS_FORCE_GET = Set.new([301, 302, 303])
+    STATUS_REDIRECTION = STATUS_FORCE_GET + [307, 308]
   end
 
   class BodyReceiver

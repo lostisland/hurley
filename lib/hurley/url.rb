@@ -29,11 +29,15 @@ module Hurley
       if u = @parsed.user
         @user = CGI.unescape(u)
         @parsed.user = nil
+      else
+        @user = nil
       end
 
       if pwd = @parsed.password
         @password = CGI.unescape(pwd)
         @parsed.password = nil
+      else
+        @password = nil
       end
 
       @parsed.userinfo = nil

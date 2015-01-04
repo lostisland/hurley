@@ -47,10 +47,6 @@ res = client.get("/users/tater") do |req|
 end
 ```
 
-## TODO
-
-* [ ] redirections
-
 ## NOT TODO
 
 * [ ] connection adapters with dependencies
