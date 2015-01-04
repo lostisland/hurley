@@ -153,6 +153,13 @@ module Hurley
           assert_equal %(delete), client.delete("echo").body
         end
 
+        def test_timeout
+          client.request_options.timeout = 0.5
+          assert_raises Hurley::Timeout do
+            client.get "/slow"
+          end
+        end
+
         def test_connection_error
           assert_raises Hurley::ConnectionFailed do
             client.get "http://localhost:4"

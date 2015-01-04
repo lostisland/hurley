@@ -14,6 +14,14 @@ module Hurley
       assert_equal "a%5Bb%5D=2", body.read
     end
 
+    def test_build_multipart_with_set_boundary
+      options = RequestOptions.new
+      options.boundary = :wat
+
+      ctype, _ = Query::Nested.new(:file => UploadIO.new(__FILE__, "text/plain")).to_form(options)
+      assert_equal "multipart/form-data; boundary=wat", ctype
+    end
+
     def test_build_multipart_with_flat_query
       ctype, body = Query::Flat.new(
         :a => 1,

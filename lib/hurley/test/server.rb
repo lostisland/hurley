@@ -50,6 +50,11 @@ module Hurley
         request.secure?.to_s
       end
 
+      get "/slow" do
+        sleep 1
+        [200, {}, "ok"]
+      end
+
       get "/204" do
         status 204 # no content
       end

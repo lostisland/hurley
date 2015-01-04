@@ -57,9 +57,9 @@ module Hurley
       build_pairs.map!(&:to_s).join(AMP)
     end
 
-    def to_form
+    def to_form(options = nil)
       if multipart?
-        boundary = Multipart.boundary
+        boundary = (options || RequestOptions.new).boundary
         return MULTIPART_TYPE % boundary, to_io(boundary)
       else
         return FORM_TYPE, StringIO.new(to_query_string)

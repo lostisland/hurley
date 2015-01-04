@@ -36,6 +36,15 @@ module Hurley
     def net_http_connection(request)
       http = Net::HTTP.new(request.url.host, request.url.port)
       configure_ssl(http, request) if request.url.scheme == Hurley::HTTPS
+
+      if t = request.options.timeout
+        http.read_timeout = http.open_timeout = t
+      end
+
+      if t = request.options.open_timeout
+        http.open_timeout = t
+      end
+
       yield http
     end
 

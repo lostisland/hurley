@@ -1,5 +1,3 @@
-require "securerandom"
-
 # Taken from multipart-post gem: https://github.com/nicksieger/multipart-post
 # Removes coupling with net/http
 
@@ -58,10 +56,6 @@ module Hurley
 
   # Internal helper classes for generating multipart bodies.
   module Multipart
-    def self.boundary
-      "Hurley-#{SecureRandom.hex}"
-    end
-
     module Part #:nodoc:
       def self.new(boundary, name, value, header = nil)
         header ||= {}

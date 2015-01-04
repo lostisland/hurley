@@ -1,6 +1,29 @@
 require "openssl"
+require "securerandom"
 
 module Hurley
+  class RequestOptions < Struct.new(
+    :timeout,
+    :open_timeout,
+    :boundary,
+    :bind,
+    :proxy,
+    :query_class,
+  )
+
+    def build_form(body)
+      query_class.new(body).to_form(self)
+    end
+
+    def boundary
+      self[:boundary] || "Hurley-#{SecureRandom.hex}"
+    end
+
+    def query_class
+      self[:query_class] ||= Query.default
+    end
+  end
+
   class SslOptions < Struct.new(
     :verify,
     :client_cert,

@@ -7,6 +7,7 @@ module Hurley
     attr_reader :url
     attr_reader :header
     attr_writer :connection
+    attr_reader :request_options
     attr_reader :ssl_options
     attr_reader :before_callbacks
     attr_reader :after_callbacks
@@ -17,6 +18,7 @@ module Hurley
       @url = Url.parse(endpoint)
       @header = Header.new :user_agent => Hurley::USER_AGENT
       @connection = nil
+      @request_options = RequestOptions.new
       @ssl_options = SslOptions.new
       yield self if block_given?
     end
@@ -109,17 +111,17 @@ module Hurley
     end
 
     def request(method, path)
-      req = Request.new(method, Url.join(@url, path), @header.dup)
-      req.ssl_options = @ssl_options.dup
-      req
+      Request.new(method, Url.join(@url, path), @header.dup, nil, @request_options.dup, @ssl_options.dup)
     end
   end
 
-  class Request < Struct.new(:verb, :url, :header, :body)
-    attr_writer :ssl_options
+  class Request < Struct.new(:verb, :url, :header, :body, :options, :ssl_options)
+    def options
+      self[:options] ||= RequestOptions.new
+    end
 
     def ssl_options
-      @ssl_options ||= SslOptions.new
+      self[:ssl_options] ||= SslOptions.new
     end
 
     def query
@@ -164,7 +166,7 @@ module Hurley
           ctype, io = body.to_form
           self.body = io
         when Hash
-          ctype, io = Query.default.new(body).to_form
+          ctype, io = options.build_form(body)
           self.body = io
         end
         header[:content_type] ||= ctype || DEFAULT_TYPE
