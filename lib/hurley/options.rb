@@ -11,13 +11,22 @@ module Hurley
 
     # String boundary to use for multipart request bodies.
     :boundary,
+
+    # A SocketBinding specifying the host and/or port of the local client
+    # socket.
     :bind,
+
+    # Hurley::Url instance of an HTTP Proxy address.
     :proxy,
 
     # Hurley::Query subclass to use for query objects.  Defaults to
     # Hurley::Query.default.
     :query_class,
   )
+
+    def bind=(b)
+      self[:bind] = SocketBinding.parse(b)
+    end
 
     def build_form(body)
       query_class.new(body).to_form(self)
@@ -67,6 +76,14 @@ module Hurley
       self[:openssl_cert_store] ||= OpenSSL::X509::Store.new.tap do |store|
         store.set_default_paths
       end
+    end
+  end
+
+  class SocketBinding < Struct.new(:host, :port)
+    def self.parse(bind)
+      h, p = bind.to_s.split(":", 2)
+      p = p.to_i
+      new(h, p.zero? ? nil : p)
     end
   end
 end

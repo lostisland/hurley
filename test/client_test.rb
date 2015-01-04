@@ -307,24 +307,27 @@ module Hurley
     def test_builds_request
       c = Client.new "https://example.com/a?a=1"
       c.header["Accept"] = "*"
-      c.request_options.bind = "bind"
+      c.request_options.bind = "bind:123"
       c.ssl_options.openssl_client_cert = "abc"
 
       req = c.request :get, "b"
-      assert_equal "bind", req.options.bind
+      assert_equal "bind", req.options.bind.host
+      assert_equal 123, req.options.bind.port
       assert_equal "abc", req.ssl_options.openssl_client_cert
       req.ssl_options.openssl_client_cert = "def"
-      req.options.bind = "bind!"
+      req.options.bind = "updated"
 
       assert_equal "*", req.header["Accept"]
       assert_equal "def", req.ssl_options.openssl_client_cert
-      assert_equal "bind!", req.options.bind
+      assert_equal "updated", req.options.bind.host
+      assert_nil req.options.bind.port
 
       url = req.url
       assert_equal "https://example.com/a/b?a=1", url.to_s
 
       assert_equal "abc", c.ssl_options.openssl_client_cert
-      assert_equal "bind", c.request_options.bind
+      assert_equal "bind", c.request_options.bind.host
+      assert_equal 123, c.request_options.bind.port
     end
 
     def test_sets_before_callbacks
