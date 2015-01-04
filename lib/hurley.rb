@@ -35,8 +35,8 @@ module Hurley
       if ex.respond_to?(:backtrace)
         super(ex.message)
         @wrapped_exception = ex
-      elsif ex.respond_to?(:each_key)
-        super("the server responded with status #{ex[:status]}")
+      elsif ex.respond_to?(:status_code)
+        super("the server responded with status #{ex.status_code}")
         @response = ex
       else
         super(ex.to_s)
@@ -52,7 +52,7 @@ module Hurley
     end
 
     def inspect
-      %(#<#{self.class}>)
+      %(#<#{self.class}: #{@wrapped_exception.class}>)
     end
   end
 
