@@ -248,6 +248,18 @@ module Hurley
       STATUS_REDIRECTION.include?(status_code)
     end
 
+    def success?
+      status_code > 199 && status_code < 300
+    end
+
+    def client_error?
+      status_code > 399 && status_code < 500
+    end
+
+    def server_error?
+      status_code > 499 && status_code < 600
+    end
+
     def automatically_redirect?(previous_requests = nil)
       return false unless redirect?
       limit = request.options.redirection_limit.to_i
