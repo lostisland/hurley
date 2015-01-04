@@ -220,6 +220,14 @@ module Hurley
       end
     end
 
+    def location
+      @location ||= begin
+        return unless loc = @header[:location]
+        verb = STATUS_FORCE_GET.include?(status_code) ? :get : request.verb
+        Request.new(verb, request.url.join(Url.parse(loc)), request.header, request.body, request.options, request.ssl_options)
+      end
+    end
+
     def receive_body(chunk)
       if @receiver.nil?
         statuses, receiver = request.send(:body_receiver)
@@ -246,6 +254,8 @@ module Hurley
         ms,
       ]
     end
+
+    STATUS_FORCE_GET = Set.new([301, 302, 303])
   end
 
   class BodyReceiver

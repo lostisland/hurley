@@ -297,6 +297,132 @@ module Hurley
       end
     end
 
+    def test_integration_follow_get_redirect
+      statuses = [301, 302, 303]
+
+      c = Client.new "http://example.com?o=1"
+      c.connection = Test.new do |t|
+        statuses.each do |st|
+          t.get "/#{st}/host/2" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/1"}, nil]
+          end
+
+          t.get "/#{st}/host/1" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/0"}, nil]
+          end
+
+          t.get "/#{st}/host/0" do |req|
+            [200, {}, "ok"]
+          end
+
+          t.post "/#{st}/host" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/2?o=2"}, nil]
+          end
+
+          t.get "/#{st}/path/2" do |req|
+            [st, {"Location" => "/#{st}/path/1"}, nil]
+          end
+
+          t.get "/#{st}/path/1" do |req|
+            [st, {"Location" => "/#{st}/path/0"}, nil]
+          end
+
+          t.get "/#{st}/path/0" do |req|
+            [200, {}, "ok"]
+          end
+
+          t.post "/#{st}/path" do |req|
+            [st, {"Location" => "2?o=2"}, nil]
+          end
+        end
+      end
+
+      statuses.each do |st|
+        {
+          "/#{st}/host" => "http://example.com/#{st}/host/",
+          "/#{st}/path" => "http://example.com/#{st}/path/",
+        }.each do |input, prefix|
+          res = c.post(input)
+          assert_equal st, res.status_code
+          assert_equal prefix + "2?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal st, res.status_code
+          assert_equal prefix + "1?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal st, res.status_code
+          assert_equal prefix + "0?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal 200, res.status_code
+        end
+      end
+    end
+
+    def test_integration_follow_post_redirect
+      statuses = [307, 308]
+
+      c = Client.new "http://example.com?o=1"
+      c.connection = Test.new do |t|
+        statuses.each do |st|
+          t.post "/#{st}/host/2" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/1"}, nil]
+          end
+
+          t.post "/#{st}/host/1" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/0"}, nil]
+          end
+
+          t.post "/#{st}/host/0" do |req|
+            [200, {}, "ok"]
+          end
+
+          t.post "/#{st}/host" do |req|
+            [st, {"Location" => "http://example.com/#{st}/host/2?o=2"}, nil]
+          end
+
+          t.post "/#{st}/path/2" do |req|
+            [st, {"Location" => "/#{st}/path/1"}, nil]
+          end
+
+          t.post "/#{st}/path/1" do |req|
+            [st, {"Location" => "/#{st}/path/0"}, nil]
+          end
+
+          t.post "/#{st}/path/0" do |req|
+            [200, {}, "ok"]
+          end
+
+          t.post "/#{st}/path" do |req|
+            [st, {"Location" => "2?o=2"}, nil]
+          end
+        end
+      end
+
+      statuses.each do |st|
+        {
+          "/#{st}/host" => "http://example.com/#{st}/host/",
+          "/#{st}/path" => "http://example.com/#{st}/path/",
+        }.each do |input, prefix|
+          res = c.post(input)
+          assert_equal st, res.status_code
+          assert_equal prefix + "2?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal st, res.status_code
+          assert_equal prefix + "1?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal st, res.status_code
+          assert_equal prefix + "0?o=2", res.location.url.to_s
+
+          res = c.call(res.location)
+          assert_equal 200, res.status_code
+        end
+      end
+    end
+
     def test_parses_endpoint
       c = Client.new "https://example.com/a?a=1"
       assert_equal "https", c.scheme
