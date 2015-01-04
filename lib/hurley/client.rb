@@ -11,7 +11,7 @@ module Hurley
     attr_reader :before_callbacks
     attr_reader :after_callbacks
 
-    def initialize(endpoint)
+    def initialize(endpoint = nil)
       @before_callbacks = []
       @after_callbacks = []
       @url = Url.parse(endpoint)

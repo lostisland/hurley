@@ -1,3 +1,4 @@
+require "forwardable"
 require "thread"
 
 module Hurley
@@ -10,6 +11,23 @@ module Hurley
     libs.each do |lib|
       require File.join(LIB_PATH, lib)
     end
+  end
+
+  def self.default_client
+    @default_client ||= mutex { Client.new }
+  end
+
+  class << self
+    extend Forwardable
+    def_delegators(:default_client,
+      :head,
+      :get,
+      :patch,
+      :put,
+      :post,
+      :delete,
+      :options,
+    )
   end
 
   def self.default_connection
