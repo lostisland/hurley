@@ -385,5 +385,15 @@ module Hurley
       assert_equal "b", u.password
       assert_equal "http://c.com/path", u.to_s
     end
+
+    def test_url_parser
+      expected = if ENV["HURLEY_ADDRESSABLE"]
+        "Addressable::URI"
+      else
+        "URI::HTTPS"
+      end
+
+      assert_equal expected, Url.parse("https://example.com").instance_variable_get(:@parsed).class.name
+    end
   end
 end

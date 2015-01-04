@@ -20,7 +20,7 @@ module Hurley
       case raw_url
       when Url then raw_url
       when nil, EMPTY then Empty.new
-      else new(URI.parse(raw_url.to_s))
+      else new(@@parser.call(raw_url.to_s))
       end
     end
 
@@ -31,10 +31,12 @@ module Hurley
         @parsed.user = nil
       end
 
-      if p = @parsed.password
-        @password = p
+      if pwd = @parsed.password
+        @password = pwd
         @parsed.password = nil
       end
+
+      @parsed.userinfo = nil
     end
 
     def self.join(absolute, relative)
@@ -70,28 +72,6 @@ module Hurley
     def join(relative)
       has_host = false
 
-      if relative.scheme
-        has_host = true
-      else
-        relative.scheme = scheme
-      end
-
-      if relative.host
-        has_host = true
-      else
-        relative.host = host
-      end
-
-      inferred_port = INFERRED_PORTS[relative.scheme]
-      if !has_host && relative.port == inferred_port
-        relative.port = port == inferred_port ?
-          nil :
-          port
-      end
-
-      relative.user ||= user
-      relative.password ||= password
-
       query.each do |key, value|
         relative.query[key] = value unless relative.query.key?(key)
       end
@@ -107,6 +87,26 @@ module Hurley
 
       if !relative.path.empty? && !relative.path.start_with?(SLASH)
         relative.path = "/#{relative.path}"
+      end
+
+      if relative.host
+        has_host = true
+      else
+        relative.host = host
+      end
+
+      relative.user ||= user
+      relative.password ||= password
+
+      if relative.scheme
+        has_host = true
+      else
+        relative.scheme = scheme
+      end
+
+      inferred_port = INFERRED_PORTS[relative.scheme]
+      if !has_host && relative.port == inferred_port
+        relative.port = port == inferred_port ? nil : port
       end
 
       relative
@@ -164,6 +164,8 @@ module Hurley
 
     private
 
+    @@parser = URI.method(:parse)
+
     EMPTY = "".freeze
     SLASH = "/".freeze
 
@@ -174,7 +176,7 @@ module Hurley
 
     class Empty < self
       def initialize
-        @parsed = URI.parse(EMPTY)
+        @parsed = @@parser.call(EMPTY)
         @query = Query.parse(EMPTY)
       end
 

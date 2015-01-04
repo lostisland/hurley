@@ -79,4 +79,8 @@ module Hurley
     "query",
     "client",
   )
+
+  if defined?(Addressable::URI)
+    require_lib "addressable"
+  end
 end

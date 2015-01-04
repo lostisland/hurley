@@ -50,8 +50,8 @@ end
 ## TODO
 
 * [ ] redirections
-* [ ] addressable uri support
 * [ ] request options (timeouts)
+* [ ] proxy support
 
 ## NOT TODO
 

@@ -24,3 +24,5 @@ env:
   matrix:
     - HURLEY_SSL=no
     - HURLEY_SSL=yes
+    - HURLEY_SSL=no HURLEY_ADDRESSABLE=1
+    - HURLEY_SSL=yes HURLEY_ADDRESSABLE=1

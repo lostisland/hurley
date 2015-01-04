@@ -6,6 +6,7 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
+    addressable (2.3.6)
     minitest (5.5.0)
     rack (1.6.0)
     rack-protection (1.5.3)
@@ -20,6 +21,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
+  addressable (~> 2.3.6)
   bundler (~> 1.0)
   hurley!
   minitest (~> 5.5.0)
