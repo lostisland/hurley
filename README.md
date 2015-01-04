@@ -18,7 +18,6 @@ require "hurley"
 # is being loaded.
 require "hurley/addressble"
 
-
 client = Hurley::Client.new "https://api.github.com"
 client.header[:accept] = "application/vnd.github+json"
 client.query["a"] = "?a is set on every request too"
@@ -33,11 +32,9 @@ client.request_options.timeout = 3
 # See Hurley::SslOptions in lib/hurley/options.rb
 client.ssl_options.ca_file = "path/to/cert.crt"
 
-# These properties can be changed on a per-request basis.
-
 # Verbs head, get, put, post, patch, delete, and options are supported.
 response = client.get("users/tater") do |req|
-  # override settings for this request only
+  # These properties can be changed on a per-request basis.
   req.header[:accept] = "application/vnd.github.preview+json"
   req.query["a"] = "override!"
 
@@ -50,8 +47,7 @@ response = client.get("users/tater") do |req|
   req.port   # => 443
 end
 
-# You can also use Hurley class level shortcuts.
-# Hurley.default_client is the Client object used.
+# You can also use Hurley class level shortcuts, which use Hurley.default_client.
 response = Hurley.get("https://api.github.com/users/tater")
 
 response.header[:content_type] # => "application/json"
@@ -295,7 +291,9 @@ requests without hitting a real endpoint.
 ```ruby
 require "hurley"
 require "hurley/test"
+
 client = Hurley::Client.new "https://api.github.com"
+
 client.connection = Hurley::Test.new do |test|
   # Verbs head, get, put, post, patch, delete, and options are supported.
   test.get "/user" do |req|
