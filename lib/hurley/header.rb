@@ -51,8 +51,13 @@ module Hurley
       ]
     end
 
-    def self.canonical(key)
-      KEYS[key]
+    def self.canonical(input)
+      KEYS[input] || begin
+        key = input.to_s.tr(UNDERSCORE, DASH)
+        key.downcase!
+        key.gsub!(/(\A|\-)(\S)/) { |s| s.upcase! ; s }
+        key
+      end
     end
 
     def self.add_canonical_key(*canonicals)
@@ -72,13 +77,7 @@ module Hurley
     #
     # KEYS["content_type"] # => "Content-Type"
     #
-    KEYS = Hash.new do |h, input|
-      key = input.to_s.tr(UNDERSCORE, DASH)
-      key.downcase!
-      key.gsub!(/(\A|\-)(\S)/) { |s| s.upcase! ; s }
-      key
-    end
-
+    KEYS = {"ETag".freeze => "Etag".freeze}
     DASH = "-".freeze
     UNDERSCORE = "_".freeze
 
