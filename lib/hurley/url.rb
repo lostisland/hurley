@@ -128,16 +128,16 @@ module Hurley
     end
 
     def to_s
-      if (q = query.to_query_string).empty?
-        @parsed.query = nil
-      else
-        @parsed.query = q
-      end
+      @parsed.query = raw_query
       @parsed.to_s
     end
 
     def raw_query
-      @parsed.query
+      if (q = query.to_query_string).empty?
+        nil
+      else
+        q
+      end
     end
 
     def raw_query=(new_query)
@@ -155,7 +155,7 @@ module Hurley
     end
 
     def query_class=(new_query)
-      @query = nil
+      @query = query ? new_query.new(@query) : nil
       @query_class = new_query
     end
 

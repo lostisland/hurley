@@ -400,6 +400,22 @@ module Hurley
       assert_equal "http://c.com/path", u.to_s
     end
 
+    def test_change_query_class
+      u = Url.parse "http://a.com?b=c"
+      u.query_class = Query::Nested
+
+      assert_equal "b=c", u.raw_query
+      assert_kind_of Query::Nested, u.query
+
+      u.query["d"] = "f"
+      u.query["a"] = [1,2]
+      assert_equal "b=c&d=f&a%5B%5D=1&a%5B%5D=2", u.raw_query
+
+      u.query_class = Query::Flat
+      assert_kind_of Query::Flat, u.query
+      assert_equal "b=c&d=f&a=1&a=2", u.raw_query
+    end
+
     def test_url_parser
       expected = if ENV["HURLEY_ADDRESSABLE"]
         "Addressable::URI"
