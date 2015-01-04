@@ -225,7 +225,7 @@ module Hurley
       @receiver = nil
       @timing = nil
       @started_at = Time.now.to_f
-      yield self
+      yield self if block_given?
       @ended_at = Time.now.to_f
       if @receiver.respond_to?(:join)
         @body = @receiver.join
@@ -244,7 +244,11 @@ module Hurley
       end
     end
 
-    def redirect?
+    def status_type
+      @status_type ||= STATUS_TYPES.detect { |t| send("#{t}?") } || :other
+    end
+
+    def redirection?
       STATUS_REDIRECTION.include?(status_code)
     end
 
@@ -261,7 +265,7 @@ module Hurley
     end
 
     def automatically_redirect?(previous_requests = nil)
-      return false unless redirect?
+      return false unless redirection?
       limit = request.options.redirection_limit.to_i
       limit > 0 && Array(previous_requests).size < limit
     end
@@ -293,6 +297,7 @@ module Hurley
       ]
     end
 
+    STATUS_TYPES = [:success, :redirection, :client_error, :server_error]
     STATUS_FORCE_GET = Set.new([301, 302, 303])
     STATUS_REDIRECTION = STATUS_FORCE_GET + [307, 308]
   end

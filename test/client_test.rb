@@ -512,5 +512,68 @@ module Hurley
       assert_equal [:first, :undefined, :third], c.after_callbacks.map(&:name)
       assert_equal [1,2,3], c.after_callbacks.inject([]) { |list, cb| list << cb.call(nil) }
     end
+
+    SUCCESSFUL_RESPONSES = [200, 201, 202, 204, 205, 206]
+    REDIRECTION_RESPONSES = [301, 302, 303, 307, 308]
+    CLIENT_ERROR_RESPONSES = [400, 404, 405, 406, 409, 410, 422]
+    SERVER_ERROR_RESPONSES = [500, 502, 503, 504]
+    ALL_RESPONSES = SUCCESSFUL_RESPONSES + REDIRECTION_RESPONSES + CLIENT_ERROR_RESPONSES + SERVER_ERROR_RESPONSES + [100, 304]
+
+    def test_knows_successful_responses
+      bad = SUCCESSFUL_RESPONSES.reject do |st|
+        res = Response.new(nil, st)
+        res.success? && res.status_type == :success
+      end
+      assert_empty bad
+
+      bad = (ALL_RESPONSES - SUCCESSFUL_RESPONSES).reject do |st|
+        res = Response.new(nil, st)
+
+        !Response.new(nil, st).success?
+      end
+      assert_empty bad
+    end
+
+    def test_knows_redirection_responses
+      bad = REDIRECTION_RESPONSES.reject do |st|
+        res = Response.new(nil, st)
+        res.redirection? && res.status_type == :redirection
+      end
+      assert_empty bad
+
+      bad = (ALL_RESPONSES - REDIRECTION_RESPONSES).reject do |st|
+        res = Response.new(nil, st)
+        !res.redirection? && res.status_type != :redirection
+      end
+      assert_empty bad
+    end
+
+    def test_knows_client_error_responses
+      bad = CLIENT_ERROR_RESPONSES.reject do |st|
+        res = Response.new(nil, st)
+        res.client_error? && res.status_type == :client_error
+      end
+      assert_empty bad
+
+      bad = (ALL_RESPONSES - CLIENT_ERROR_RESPONSES).reject do |st|
+        res = Response.new(nil, st)
+        !res.client_error? && res.status_type != :client_error
+      end
+      assert_empty bad
+    end
+
+    def test_knows_server_error_responses
+      bad = SERVER_ERROR_RESPONSES.reject do |st|
+        res = Response.new(nil, st)
+        res.server_error? && res.status_type == :server_error
+      end
+      assert_empty bad
+
+      bad = (ALL_RESPONSES - SERVER_ERROR_RESPONSES).reject do |st|
+        res = Response.new(nil, st)
+        !res.server_error? && res.status_type != :server_error
+      end
+      assert_empty bad
+    end
   end
 end

@@ -20,7 +20,7 @@ module Hurley
     :proxy,
 
     # Integer limit on the number of redirects that are automatically followed.
-    # Default: 10
+    # Default: 5
     :redirection_limit,
 
     # Hurley::Query subclass to use for query objects.  Defaults to
@@ -29,7 +29,7 @@ module Hurley
   )
 
     def redirection_limit
-      self[:redirection_limit] ||= 10
+      self[:redirection_limit] ||= 5
     end
 
     def bind=(b)
