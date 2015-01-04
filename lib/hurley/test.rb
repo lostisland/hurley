@@ -39,7 +39,7 @@ module Hurley
 
     def call(request)
       handler = @handlers.detect { |h| h.matches?(request) } ||
-        self.class.method(:not_found)
+        Hanlder.method(:not_found)
       # Create a new url with fresh state from the url string
       request.url = Url.parse(request.url.to_s)
       handler.call(request)
@@ -52,6 +52,12 @@ module Hurley
     class Handler
       attr_reader :request
       attr_reader :callback
+
+      def self.not_found(request)
+        Response.new(request, 404, Header.new) do |res|
+          res.receive_body("no test handler")
+        end
+      end
 
       def initialize(request, callback)
         @request = request
@@ -90,12 +96,6 @@ module Hurley
 
       EMPTY_OR_SLASH = %r{\A/?\z}
       URL_ATTRS = [:scheme, :host, :port]
-    end
-
-    def self.not_found(request)
-      Response.new(request, 404, Header.new) do |res|
-        res.receive_body("no test handler")
-      end
     end
   end
 end
