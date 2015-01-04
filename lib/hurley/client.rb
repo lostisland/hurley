@@ -9,8 +9,6 @@ module Hurley
     attr_writer :connection
     attr_reader :request_options
     attr_reader :ssl_options
-    attr_reader :before_callbacks
-    attr_reader :after_callbacks
 
     def initialize(endpoint = nil)
       @before_callbacks = []
@@ -101,6 +99,14 @@ module Hurley
       @after_callbacks << (block_given? ?
         NamedCallback.for(name, Proc.new) :
         NamedCallback.for(nil, name))
+    end
+
+    def before_callbacks
+      @before_callbacks.map(&:name)
+    end
+
+    def after_callbacks
+      @after_callbacks.map(&:name)
     end
 
     def request(method, path)
@@ -321,8 +327,12 @@ module Hurley
       if callback.respond_to?(:name) && !name
         callback
       else
-        new(name || :undefined, callback)
+        new(name, callback)
       end
+    end
+
+    def name
+      self[:name] ||= callback.inspect
     end
 
     def call(arg)

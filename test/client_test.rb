@@ -499,8 +499,11 @@ module Hurley
       c.before_call { |r| 2 }
       c.before_call NamedCallback.new(:third, lambda { |r| 3 })
 
-      assert_equal [:first, :undefined, :third], c.before_callbacks.map(&:name)
-      assert_equal [1,2,3], c.before_callbacks.inject([]) { |list, cb| list << cb.call(nil) }
+      callbacks = c.before_callbacks
+      assert_equal 3, callbacks.size
+      assert_equal :first, callbacks[0]
+      assert callbacks[1].start_with?("#<Proc:")
+      assert_equal :third, callbacks[2]
     end
 
     def test_sets_after_callbacks
@@ -509,8 +512,11 @@ module Hurley
       c.after_call { |r| 2 }
       c.after_call NamedCallback.new(:third, lambda { |r| 3 })
 
-      assert_equal [:first, :undefined, :third], c.after_callbacks.map(&:name)
-      assert_equal [1,2,3], c.after_callbacks.inject([]) { |list, cb| list << cb.call(nil) }
+      callbacks = c.after_callbacks
+      assert_equal 3, callbacks.size
+      assert_equal :first, callbacks[0]
+      assert callbacks[1].start_with?("#<Proc:")
+      assert_equal :third, callbacks[2]
     end
 
     SUCCESSFUL_RESPONSES = [200, 201, 202, 204, 205, 206]
