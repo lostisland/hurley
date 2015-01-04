@@ -146,8 +146,9 @@ module Hurley
     end
 
     def basic_auth
-      return unless @user || @password
-      "Basic #{Base64.encode64("#{@user}:#{@password}").rstrip}"
+      return unless @user
+      userinfo = @password ? "#{@user}:#{@password}" : @user
+      "Basic #{Base64.encode64(userinfo).rstrip}"
     end
 
     def query_class
