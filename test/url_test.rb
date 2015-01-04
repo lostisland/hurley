@@ -379,6 +379,20 @@ module Hurley
       assert_equal "http://c.com/path", u.to_s
     end
 
+    def test_join_auth_url_with_url_of_same_host
+      u = Url.join("http://a:b@c.com", "http://c.com/path")
+      assert_equal "a", u.user
+      assert_equal "b", u.password
+      assert_equal "http://c.com/path", u.to_s
+    end
+
+    def test_join_auth_url_with_url_of_different_host
+      u = Url.join("http://a:b@c.com", "http://d.com/path")
+      assert_nil u.user
+      assert_nil u.password
+      assert_equal "http://d.com/path", u.to_s
+    end
+
     def test_join_url_with_auth_url
       u = Url.join("http://c.com/path", "http://a:b@c.com")
       assert_equal "a", u.user

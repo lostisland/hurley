@@ -95,8 +95,12 @@ module Hurley
         relative.host = host
       end
 
-      relative.user ||= user
-      relative.password ||= password
+      if has_host && relative.host != host
+        relative.user = relative.password = nil
+      else
+        relative.user ||= user
+        relative.password ||= password
+      end
 
       if relative.scheme
         has_host = true
