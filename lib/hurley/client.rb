@@ -110,7 +110,7 @@ module Hurley
 
     def request(method, path)
       req = Request.new(method, Url.join(@url, path), @header.dup)
-      req.ssl_options = @ssl_options
+      req.ssl_options = @ssl_options.dup
       req
     end
   end

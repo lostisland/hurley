@@ -307,12 +307,19 @@ module Hurley
     def test_builds_request
       c = Client.new "https://example.com/a?a=1"
       c.header["Accept"] = "*"
+      c.ssl_options.client_cert = "abc"
 
       req = c.request :get, "b"
+      assert_equal "abc", req.ssl_options.client_cert
+      req.ssl_options.client_cert = "def"
+
       assert_equal "*", req.header["Accept"]
+      assert_equal "def", req.ssl_options.client_cert
 
       url = req.url
       assert_equal "https://example.com/a/b?a=1", url.to_s
+
+      assert_equal "abc", c.ssl_options.client_cert
     end
 
     def test_sets_before_callbacks

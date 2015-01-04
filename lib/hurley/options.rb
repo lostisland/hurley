@@ -13,6 +13,14 @@ module Hurley
     :version,
   )
 
+    def self.default_cert_store
+      @default_cert_store ||= Hurley.mutex do
+        cert_store = OpenSSL::X509::Store.new
+        cert_store.set_default_paths
+        cert_store
+      end
+    end
+
     def verify?
       self[:verify] != false
     end
@@ -24,11 +32,7 @@ module Hurley
     end
 
     def cert_store
-      self[:cert_store] ||= Hurley.mutex do
-        cert_store = OpenSSL::X509::Store.new
-        cert_store.set_default_paths
-        cert_store
-      end
+      self[:cert_store] ||= self.class.default_cert_store
     end
   end
 end
