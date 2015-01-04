@@ -172,6 +172,26 @@ module Hurley
           assert_nil res.body
         end
 
+        def test_proxy
+          return unless client.request_options.proxy = proxy_url
+
+          res = client.get("/echo")
+          assert_equal "get", res.body
+
+          unless Integration.ssl?
+            # proxy can't append "Via" header for HTTPS responses
+            assert_match(/:#{proxy_url.port}$/, res.header[:Via])
+          end
+        end
+
+        def test_proxy_auth_fail
+          return unless client.request_options.proxy = proxy_url
+          client.request_options.proxy.password = "WRONG"
+          assert_raises Hurley::ConnectionFailed do
+            client.put("/echo")
+          end
+        end
+
         def client
           @client ||= Client.new(Integration.live_endpoint) do |cli|
             cli.header["X-Hurley-Connection"] = connection.class.name
@@ -180,6 +200,12 @@ module Hurley
             if Integration.ssl?
               cli.ssl_options.ca_file = Integration.ssl_file
             end
+          end
+        end
+
+        def proxy_url
+          @proxy_url ||= if raw_url = ENV["HURLEY_PROXY"]
+            Url.parse(raw_url)
           end
         end
       end

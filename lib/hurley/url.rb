@@ -27,12 +27,12 @@ module Hurley
     def initialize(parsed)
       @parsed = parsed
       if u = @parsed.user
-        @user = u
+        @user = CGI.unescape(u)
         @parsed.user = nil
       end
 
       if pwd = @parsed.password
-        @password = pwd
+        @password = CGI.unescape(pwd)
         @parsed.password = nil
       end
 

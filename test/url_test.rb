@@ -362,13 +362,13 @@ module Hurley
     end
 
     def test_parse_url_with_auth
-      u = Url.parse("https://a:b@example.com")
+      u = Url.parse("https://a:b%20c@example.com")
       assert_equal "https", u.scheme
       assert_equal "example.com", u.host
       assert_equal 443, u.port
       assert_equal "", u.path
       assert_equal "a", u.user
-      assert_equal "b", u.password
+      assert_equal "b c", u.password
       assert_equal "https://example.com", u.to_s
     end
 

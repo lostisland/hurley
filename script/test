@@ -13,13 +13,14 @@
 #   $ script/test excon typhoeus
 #
 #   # Run only tests matching /ssl/ for the net_http adapter, with SSL enabled.
-#   $ SSL=yes script/test net_http -- -n /ssl/
+#   $ HURLEY_SSL=1 script/test net_http -- -n /ssl/
 #
 #   # Run against multiple rbenv versions
 #   $ RBENV_VERSIONS="1.9.3-p194 ree-1.8.7-2012.02" script/test
 set -e
 
 port=3999
+proxy_port=3998
 scheme=http
 
 if [ "$HURLEY_SSL" = "1" ] || [ "$HURLEY_SSL" = "yes" ]; then
@@ -44,6 +45,12 @@ filter_matching() {
 start_server() {
   mkdir -p log
   script/server -p $port >log/test.log 2>&1 &
+  echo $!
+}
+
+start_proxy() {
+  mkdir -p log
+  script/proxy-server -p $proxy_port -u "faraday@test.local:there is cake" >log/proxy.log 2>&1 &
   echo $!
 }
 
@@ -110,19 +117,24 @@ if [ -n "$(filter_matching "live" "${test_files[@]}")" ]; then
     exit 1
   fi
   server_pid=$(start_server)
+  proxy_pid=$(start_proxy)
   wait_for_server 30 $port || {
     cat log/test.log
     kill "$server_pid"
+    kill "$proxy_pid"
     exit 1
   }
+  wait_for_server 5 $proxy_port
   cleanup() {
     if [ $? -ne 0 ] && [ -n "$TRAVIS" ]; then
       cat log/test.log
     fi
     kill "$server_pid"
+    kill "$proxy_pid"
   }
   trap cleanup INT EXIT
   export HURLEY_LIVE="${scheme}://localhost:${port}"
+  export HURLEY_PROXY="http://faraday%40test.local:there%20is%20cake@localhost:${proxy_port}"
 fi
 
 warnings="${TMPDIR:-/tmp}/faraday-warnings.$$"

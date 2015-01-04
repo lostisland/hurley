@@ -17,6 +17,11 @@ module Hurley
             http_res.each_header do |key, value|
               res.header[key] = value
             end
+
+            # net/http only raises exception on 407 with ssl...?
+            if res.status_code == 407
+              raise ConnectionFailed, %(407 "Proxy Authentication Required")
+            end
           end
         rescue *NET_HTTP_EXCEPTIONS => err
           if defined?(OpenSSL) && OpenSSL::SSL::SSLError === err
@@ -34,7 +39,12 @@ module Hurley
     private
 
     def net_http_connection(request)
-      http = Net::HTTP.new(request.url.host, request.url.port)
+      http = if proxy = request.options.proxy
+        Net::HTTP::Proxy(proxy.host, proxy.port, proxy.user, proxy.password)
+      else
+        Net::HTTP
+      end.new(request.url.host, request.url.port)
+
       configure_ssl(http, request) if request.url.scheme == Hurley::HTTPS
 
       if t = request.options.timeout
