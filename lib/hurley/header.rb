@@ -52,26 +52,42 @@ module Hurley
     end
 
     def self.canonical(key)
-      KEYS[key] || key.to_s
+      KEYS[key]
     end
 
     def self.add_canonical_key(*canonicals)
       canonicals.each do |canonical|
+        canonical.freeze
         KEYS[canonical] = canonical
         shortcut = canonical.downcase
-        KEYS[shortcut] = canonical
-        shortcut.gsub!("-", "_")
-        KEYS[shortcut] = canonical
-        KEYS[shortcut.to_sym] = canonical
+        KEYS[shortcut.freeze] = canonical
+        KEYS[shortcut.tr(DASH, UNDERSCORE).to_sym] = canonical
       end
     end
 
-    # hash of "shortcut key" => "canonical header key"
-    KEYS = {
-      "ETag" => "Etag",
-    }
+    private
 
-    # just common headers, not an exhaustive list
+    # hash of "shortcut key" => "canonical header key"
+    # string keys are converted to canonical header names:
+    #
+    # KEYS["content_type"] # => "Content-Type"
+    #
+    KEYS = Hash.new do |h, input|
+      key = input.to_s.tr(UNDERSCORE, DASH)
+      key.downcase!
+      key.gsub!(/(\A|\-)(\S)/) { |s| s.upcase! ; s }
+      key
+    end
+
+    DASH = "-".freeze
+    UNDERSCORE = "_".freeze
+
+    # Adds canonical header keys for common headers.
+    #
+    # KEYS[:content_type]  # => "Content-Type"
+    # KEYS["Content-Type"] # => "Content-Type"
+    # KEYS["content-type"] # => "Content-Type"
+    #
     add_canonical_key(
       "Accept",
       "Access-Control-Allow-Credentials",
@@ -122,5 +138,8 @@ module Hurley
       "X-Served-By",
       "X-Xss-Protection",
     )
+
+    # Some weird exceptions
+    KEYS["ETag"] = "Etag"
   end
 end

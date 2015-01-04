@@ -39,7 +39,6 @@ module Hurley
       [
         "Content-Type",
         "content-type",
-        "content_type",
         :content_type,
       ].each do |key|
         assert h.key?(key)
@@ -47,13 +46,26 @@ module Hurley
       end
     end
 
-    def test_set_and_get_key
-      h = Header.new
-      assert_nil h[:content_type]
+    def test_set_and_get_key_with_shortcuts
+      ["Content-Type", "content-type", :content_type, "CONTENT-TYPE"].each do |key|
+        h = Header.new
+        assert_nil h[key]
 
-      h[:content_type] = "text/plain"
-      assert_equal %w(Content-Type), h.keys
-      assert_equal "text/plain", h[:content_type]
+        h[key] = "text/plain"
+        assert_equal %w(Content-Type), h.keys
+        assert_equal "text/plain", h[key]
+      end
+    end
+
+    def test_set_and_get_custom_key
+      ["X-Hurley", "x-hurley", :x_hurley, "X-HURLEY"].each do |key|
+        h = Header.new
+        assert_nil h[key]
+
+        h[key] = "text/plain"
+        assert_equal %w(X-Hurley), h.keys
+        assert_equal "text/plain", h[key]
+      end
     end
 
     def test_delete_key

@@ -51,7 +51,6 @@ end
 
 * [ ] redirections
 * [ ] addressable uri support
-* [ ] canonical header names
 * [ ] request options (timeouts)
 
 ## NOT TODO
