@@ -197,10 +197,9 @@ module Hurley
       end
     end
 
-    def to_io(boundary = nil, part_headers = nil)
+    def to_io(boundary, part_headers = nil)
       parts = []
 
-      boundary ||= Multipart.boundary
       part_headers ||= {}
       build_pairs.each do |pair|
         parts << Multipart::Part.new(boundary, pair.key, pair.value, part_headers[pair.key])
