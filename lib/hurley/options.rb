@@ -3,11 +3,19 @@ require "securerandom"
 
 module Hurley
   class RequestOptions < Struct.new(
+    # Integer or Fixnum number of seconds to wait for one block to be read.
     :timeout,
+
+    # Integer or Fixnum number of seconds to wait for the connection to open.
     :open_timeout,
+
+    # String boundary to use for multipart request bodies.
     :boundary,
     :bind,
     :proxy,
+
+    # Hurley::Query subclass to use for query objects.  Defaults to
+    # Hurley::Query.default.
     :query_class,
   )
 
@@ -25,37 +33,40 @@ module Hurley
   end
 
   class SslOptions < Struct.new(
-    :verify,
-    :client_cert,
-    :client_key,
-    :cert_store,
+    # Boolean that specifies whether to skip SSL verification.
+    :skip_verification,
+
+    # An OpenSSL::X509::Certificate object for a client certificate.
+    :openssl_client_cert,
+
+    # An OpenSSL::PKey::RSA or OpenSSL::PKey::DSA object.
+    :openssl_client_key,
+
+    # The X509::Store to verify peer certificate.
+    :openssl_cert_store,
+
+    # String path of a CA certification file in PEM format.
     :ca_file,
+
+    # String path of a CA certification directory containing certifications in PEM format.
     :ca_path,
-    :verify_mode,
+
+    # Sets the maximum depth for the certificate chain verification.
     :verify_depth,
+
+    # Sets the SSL version.  See OpenSSL::SSL::SSLContext::METHODS for available
+    # versions.
     :version,
   )
 
-    def self.default_cert_store
-      @default_cert_store ||= Hurley.mutex do
-        cert_store = OpenSSL::X509::Store.new
-        cert_store.set_default_paths
-        cert_store
+    def openssl_verify_mode
+      skip_verification ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+    end
+
+    def openssl_cert_store
+      self[:openssl_cert_store] ||= OpenSSL::X509::Store.new.tap do |store|
+        store.set_default_paths
       end
-    end
-
-    def verify?
-      self[:verify] != false
-    end
-
-    def verify_mode
-      self[:verify_mode] || begin
-        verify? ? OpenSSL::SSL::VERIFY_PEER : OpenSSL::SSL::VERIFY_NONE
-      end
-    end
-
-    def cert_store
-      self[:cert_store] ||= self.class.default_cert_store
     end
   end
 end

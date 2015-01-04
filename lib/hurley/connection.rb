@@ -81,11 +81,11 @@ module Hurley
     def configure_ssl(http, request)
       ssl = request.ssl_options
       http.use_ssl = true
-      http.verify_mode = ssl.verify_mode
-      http.cert_store = ssl.cert_store
+      http.verify_mode = ssl.openssl_verify_mode
+      http.cert_store = ssl.openssl_cert_store
 
-      http.cert = ssl.client_cert if ssl.client_cert
-      http.key = ssl.client_key if ssl.client_key
+      http.cert = ssl.openssl_client_cert if ssl.openssl_client_cert
+      http.key = ssl.openssl_client_key if ssl.openssl_client_key
       http.ca_file = ssl.ca_file if ssl.ca_file
       http.ca_path = ssl.ca_path if ssl.ca_path
       http.verify_depth = ssl.verify_depth if ssl.verify_depth

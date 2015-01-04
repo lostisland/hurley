@@ -308,22 +308,22 @@ module Hurley
       c = Client.new "https://example.com/a?a=1"
       c.header["Accept"] = "*"
       c.request_options.bind = "bind"
-      c.ssl_options.client_cert = "abc"
+      c.ssl_options.openssl_client_cert = "abc"
 
       req = c.request :get, "b"
       assert_equal "bind", req.options.bind
-      assert_equal "abc", req.ssl_options.client_cert
-      req.ssl_options.client_cert = "def"
+      assert_equal "abc", req.ssl_options.openssl_client_cert
+      req.ssl_options.openssl_client_cert = "def"
       req.options.bind = "bind!"
 
       assert_equal "*", req.header["Accept"]
-      assert_equal "def", req.ssl_options.client_cert
+      assert_equal "def", req.ssl_options.openssl_client_cert
       assert_equal "bind!", req.options.bind
 
       url = req.url
       assert_equal "https://example.com/a/b?a=1", url.to_s
 
-      assert_equal "abc", c.ssl_options.client_cert
+      assert_equal "abc", c.ssl_options.openssl_client_cert
       assert_equal "bind", c.request_options.bind
     end
 

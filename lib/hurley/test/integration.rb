@@ -201,6 +201,12 @@ module Hurley
 
           assert_includes err.message, "certificate"
         end
+
+        def test_GET_ssl_skips_verification
+          client.ssl_options.ca_file = "tmp/hurley-different-ca-cert.crt"
+          client.ssl_options.skip_verification = true
+          assert_equal "true", client.get("/ssl").body
+        end
       end
 
       class GenericIO
