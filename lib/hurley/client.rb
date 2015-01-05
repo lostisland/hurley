@@ -194,7 +194,7 @@ module Hurley
     end
 
     def set_authorization_header_from_basic_auth!
-      header[:authorization] = url.basic_auth if url.basic_auth
+      header[:authorization] = url.basic_auth if url.basic_auth?
     end
 
     def prepare_body_and_content_type!

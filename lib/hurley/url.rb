@@ -155,6 +155,10 @@ module Hurley
       "Basic #{Base64.encode64(userinfo).rstrip}"
     end
 
+    def basic_auth?
+      @user ? true : false
+    end
+
     def query_class
       @query_class ||= Query.default
     end

@@ -407,6 +407,13 @@ module Hurley
       assert_equal "Basic #{Base64.encode64("a b").rstrip}", u.basic_auth
     end
 
+    def test_basic_auth?
+      url_with_user = Url.parse("https://a@example.com")
+      assert_equal url_with_user.basic_auth?, true
+      url_without_user = Url.parse("https://example.com")
+      assert_equal url_without_user.basic_auth?, false
+    end
+
     def test_join_url_with_auth_url
       u = Url.join("http://c.com/path", "http://a:b@c.com")
       assert_equal "a", u.user
