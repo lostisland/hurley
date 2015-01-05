@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "minitest", "~> 5.5.0"
   spec.add_development_dependency "sinatra", "~> 1.4.5"
   spec.authors = ["Rick Olson"]
-  spec.description = %q{Simple wrapper for the GitHub API}
+  spec.description = %q{Hurley provides a common interface for working with different HTTP adapters.}
   spec.email = ["technoweenie@gmail.com"]
   dev_null    = File.exist?("/dev/null") ? "/dev/null" : "NUL"
   git_files   = `git ls-files -z 2>#{dev_null}`
