@@ -50,7 +50,7 @@ start_server() {
 
 start_proxy() {
   mkdir -p log
-  script/proxy-server -p $proxy_port -u "faraday@test.local:there is cake" >log/proxy.log 2>&1 &
+  script/proxy-server -p $proxy_port -u "hurley@test.local:there is cake" >log/proxy.log 2>&1 &
   echo $!
 }
 
@@ -134,10 +134,10 @@ if [ -n "$(filter_matching "live" "${test_files[@]}")" ]; then
   }
   trap cleanup INT EXIT
   export HURLEY_LIVE="${scheme}://localhost:${port}"
-  export HURLEY_PROXY="http://faraday%40test.local:there%20is%20cake@localhost:${proxy_port}"
+  export HURLEY_PROXY="http://hurley%40test.local:there%20is%20cake@localhost:${proxy_port}"
 fi
 
-warnings="${TMPDIR:-/tmp}/faraday-warnings.$$"
+warnings="${TMPDIR:-/tmp}/hurley-warnings.$$"
 
 run_test_files() {
   # Save warnings on stderr to a separate file
