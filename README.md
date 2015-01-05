@@ -16,7 +16,7 @@ require "hurley"
 # If you prefer Addressable::URI, require this too:
 # This is required automatically if `Addressable::URI` is defined when Hurley
 # is being loaded.
-require "hurley/addressble"
+require "hurley/addressable"
 
 client = Hurley::Client.new "https://api.github.com"
 client.header[:accept] = "application/vnd.github+json"
