@@ -408,10 +408,8 @@ module Hurley
     end
 
     def test_basic_auth?
-      url_with_user = Url.parse("https://a@example.com")
-      assert_equal url_with_user.basic_auth?, true
-      url_without_user = Url.parse("https://example.com")
-      assert_equal url_without_user.basic_auth?, false
+      assert Url.parse("https://a@example.com").basic_auth?
+      assert !Url.parse("https://example.com").basic_auth?
     end
 
     def test_join_url_with_auth_url
