@@ -89,16 +89,16 @@ module Hurley
       call_with_redirects(request, [])
     end
 
-    def before_call(name = nil)
+    def before_call(name_or_callback = nil)
       @before_callbacks << (block_given? ?
-        NamedCallback.for(name, Proc.new) :
-        NamedCallback.for(nil, name))
+        NamedCallback.for(name_or_callback, Proc.new) :
+        NamedCallback.for(nil, name_or_callback))
     end
 
-    def after_call(name = nil)
+    def after_call(name_or_callback = nil)
       @after_callbacks << (block_given? ?
-        NamedCallback.for(name, Proc.new) :
-        NamedCallback.for(nil, name))
+        NamedCallback.for(name_or_callback  , Proc.new) :
+        NamedCallback.for(nil, name_or_callback))
     end
 
     def before_callbacks
