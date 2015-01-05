@@ -1,3 +1,4 @@
+sudo: false
 language: ruby
 install: script/bootstrap
 script: script/test
