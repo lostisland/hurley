@@ -53,6 +53,30 @@ module Hurley
     # Boolean that specifies whether to skip SSL verification.
     :skip_verification,
 
+    # Sets the maximum depth for the certificate chain verification.
+    :verify_depth,
+
+    # String path of a CA certification file in PEM format.
+    :ca_file,
+
+    # String path of a CA certification directory containing certifications in PEM format.
+    :ca_path,
+
+    # String client cert contents.
+    :client_cert,
+
+    # String path to client certificate.
+    :client_cert_path,
+
+    # String private key contents.
+    :private_key,
+
+    # String path to private key.
+    :private_key_path,
+
+    # String pass for the private key
+    :private_key_pass,
+
     # An OpenSSL::X509::Certificate object for a client certificate.
     :openssl_client_cert,
 
@@ -62,27 +86,48 @@ module Hurley
     # The X509::Store to verify peer certificate.
     :openssl_cert_store,
 
-    # String path of a CA certification file in PEM format.
-    :ca_file,
-
-    # String path of a CA certification directory containing certifications in PEM format.
-    :ca_path,
-
-    # Sets the maximum depth for the certificate chain verification.
-    :verify_depth,
-
     # Sets the SSL version.  See OpenSSL::SSL::SSLContext::METHODS for available
     # versions.
     :version,
   )
 
+    def skip_verification?
+      self[:skip_verification]
+    end
+
     def openssl_verify_mode
       skip_verification ? OpenSSL::SSL::VERIFY_NONE : OpenSSL::SSL::VERIFY_PEER
+    end
+
+    def openssl_client_cert
+      self[:openssl_client_cert] ||= begin
+        cert_contents = self[:client_cert] || (self[:client_cert_path] && IO.read(self[:client_cert_path]))
+        return unless cert_contents
+        OpenSSL::X509::Certificate.new(cert_contents)
+      end
     end
 
     def openssl_cert_store
       self[:openssl_cert_store] ||= OpenSSL::X509::Store.new.tap do |store|
         store.set_default_paths
+      end
+    end
+
+    def openssl_private_key
+      @openssl_private_key ||= begin
+        pkey = if pkey_path = self[:private_key_path]
+          File.read(pkey_path)
+        else
+          self[:private_key]
+        end
+
+        return unless pkey
+
+        if OpenSSL::PKey.respond_to?(:read)
+          OpenSSL::PKey.read(pkey, self[:private_key_pass])
+        else
+          OpenSSL::PKey::RSA.new(pkey, self[:private_key_pass])
+        end
       end
     end
   end
