@@ -187,9 +187,9 @@ module Hurley
         def test_proxy_auth_fail
           return unless client.request_options.proxy = proxy_url
           client.request_options.proxy.password = "WRONG"
-          assert_raises Hurley::ConnectionFailed do
-            client.put("/echo")
-          end
+          assert_equal 407, client.put("/echo").status_code
+        rescue Hurley::ConnectionFailed
+          # this exception is allowed too
         end
 
         def client
