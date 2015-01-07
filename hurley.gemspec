@@ -17,9 +17,9 @@ Gem::Specification.new do |spec|
   spec.description = %q{Hurley provides a common interface for working with different HTTP adapters.}
   spec.email = contributors.values.compact
   spec.homepage = "https://github.com/lostisland/hurley"
-  dev_null    = File.exist?("/dev/null") ? "/dev/null" : "NUL"
-  git_files   = `git ls-files -z 2>#{dev_null}`
-  spec.files &= git_files.split("\0") if $?.success?
+  dev_null = File.exist?("/dev/null") ? "/dev/null" : "NUL"
+  git_files = `git ls-files -z 2>#{dev_null}`
+  spec.files = git_files.split("\0") if $?.success?
   spec.test_files = Dir.glob("test/**/*.rb")
   spec.licenses = ["MIT"]
   spec.name = lib
