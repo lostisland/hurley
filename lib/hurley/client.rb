@@ -135,10 +135,10 @@ module Hurley
   class Request < Struct.new(:verb, :url, :header, :body, :options, :ssl_options)
     extend Forwardable
     def_delegators(:url,
-    :query,
-    :scheme, :scheme=,
-    :host, :host=,
-    :port, :port=,
+      :query,
+      :scheme, :scheme=,
+      :host, :host=,
+      :port, :port=,
     )
 
     def options
