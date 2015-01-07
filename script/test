@@ -26,7 +26,7 @@ scheme=http
 if [ "$HURLEY_SSL" = "1" ] || [ "$HURLEY_SSL" = "yes" ]; then
   scheme=https
   if [ -z "$HURLEY_SSL_KEY" ] || [ -z "$HURLEY_SSL_FILE" ]; then
-    eval "$(script/generate_certs -s)"
+    eval "$(rake hurley:generate_certs IN_SHELL=1)"
   fi
 fi
 
@@ -44,13 +44,13 @@ filter_matching() {
 
 start_server() {
   mkdir -p log
-  script/server -p $port >log/test.log 2>&1 &
+  rake hurley:start_server HURLEY_PORT=$port >log/test.log 2>&1 &
   echo $!
 }
 
 start_proxy() {
   mkdir -p log
-  script/proxy-server -p $proxy_port -u "hurley@test.local:there is cake" >log/proxy.log 2>&1 &
+  rake hurley:start_proxy HURLEY_PORT=$proxy_port "HURLEY_PROXY_AUTH=hurley@test.local:there is cake" >log/proxy.log 2>&1 &
   echo $!
 }
 
