@@ -138,7 +138,7 @@ module Hurley
         end
 
         def test_HEAD_retrieves_no_response_body
-          assert_equal "", client.head("echo").body
+          assert_nil client.head("echo").body
         end
 
         def test_HEAD_retrieves_the_response_headers

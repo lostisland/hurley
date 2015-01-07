@@ -281,6 +281,8 @@ module Hurley
     end
 
     def receive_body(chunk)
+      return if chunk.nil?
+
       if @receiver.nil?
         statuses, receiver = request.send(:body_receiver)
         @receiver = if statuses && !statuses.include?(@status_code)
@@ -289,6 +291,7 @@ module Hurley
           receiver
         end
       end
+
       @receiver.call(self, chunk)
     end
 
