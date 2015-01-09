@@ -20,7 +20,7 @@ module Hurley
     :proxy,
 
     # Integer limit on the number of redirects that are automatically followed.
-    # Default: 5
+    # Set to < 1 to disable automatic redirections. Default: 5
     :redirection_limit,
 
     # Hurley::Query subclass to use for query objects.  Defaults to
