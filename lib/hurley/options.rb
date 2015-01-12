@@ -28,6 +28,14 @@ module Hurley
     :query_class,
   )
 
+    def timeout_ms
+      self[:timeout].to_i * 1000
+    end
+
+    def open_timeout_ms
+      self[:open_timeout].to_i * 1000
+    end
+
     def redirection_limit
       self[:redirection_limit] ||= 5
     end
