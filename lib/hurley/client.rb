@@ -235,7 +235,13 @@ module Hurley
       @receiver = nil
       @timing = nil
       @started_at = Time.now.to_f
-      yield self if block_given?
+      if block_given?
+        yield self
+        complete!
+      end
+    end
+
+    def complete!
       @ended_at = Time.now.to_f
       if @receiver.respond_to?(:join)
         @body = @receiver.join
