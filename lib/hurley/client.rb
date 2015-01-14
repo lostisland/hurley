@@ -176,39 +176,52 @@ module Hurley
     end
 
     def prepare!
-      if value = !header[:authorization] && url.basic_auth
-        header[:authorization] = value
-      end
+      prepare_basic_auth!
 
       if body
-        ctype = nil
-        case body
-        when Query
-          ctype, io = body.to_form
-          self.body = io
-        when Hash
-          ctype, io = options.build_form(body)
-          self.body = io
-        end
-        header[:content_type] ||= ctype || DEFAULT_TYPE
+        prepare_body!
       else
         return unless REQUIRED_BODY_VERBS.include?(verb)
       end
 
-      if !header.key?(:content_length) && header[:transfer_encoding] != CHUNKED
-        if body
-          if sizer = SIZE_METHODS.detect { |method| body.respond_to?(method) }
-            header[:content_length] = body.send(sizer).to_i
-          else
-            header[:transfer_encoding] = CHUNKED
-          end
-        else
-          header[:content_length] = 0
-        end
-      end
+      prepare_content_length!
     end
 
     private
+
+    def prepare_basic_auth!
+      value = !header[:authorization] && url.basic_auth
+      header[:authorization] = value if value
+    end
+
+    def prepare_body!
+      ctype = nil
+      case body
+      when Query
+        ctype, io = body.to_form
+        self.body = io
+      when Hash
+        ctype, io = options.build_form(body)
+        self.body = io
+      end
+      header[:content_type] ||= ctype || DEFAULT_TYPE
+    end
+
+    def prepare_content_length!
+      if header.key?(:content_length) || header[:transfer_encoding] == CHUNKED
+        return
+      end
+
+      if body
+        if sizer = SIZE_METHODS.detect { |method| body.respond_to?(method) }
+          header[:content_length] = body.send(sizer).to_i
+        else
+          header[:transfer_encoding] = CHUNKED
+        end
+      else
+        header[:content_length] = 0
+      end
+    end
 
     def body_receiver
       @body_receiver ||= [nil, BodyReceiver.new]
