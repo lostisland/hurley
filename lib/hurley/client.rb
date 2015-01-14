@@ -176,42 +176,56 @@ module Hurley
     end
 
     def prepare!
-      if value = !header[:authorization] && url.basic_auth
-        header[:authorization] = value
-      end
+      set_authorization_header_from_basic_auth! unless header[:authorization]
 
       if body
-        ctype = nil
-        case body
-        when Query
-          ctype, io = body.to_form
-          self.body = io
-        when Hash
-          ctype, io = options.build_form(body)
-          self.body = io
-        end
-        header[:content_type] ||= ctype || DEFAULT_TYPE
+        prepare_body_and_content_type!
       else
         return unless REQUIRED_BODY_VERBS.include?(verb)
       end
 
-      if !header.key?(:content_length) && header[:transfer_encoding] != CHUNKED
-        if body
-          if sizer = SIZE_METHODS.detect { |method| body.respond_to?(method) }
-            header[:content_length] = body.send(sizer).to_i
-          else
-            header[:transfer_encoding] = CHUNKED
-          end
-        else
-          header[:content_length] = 0
-        end
-      end
+      set_content_length_or_chunked! unless content_length_or_chunked_set?
     end
 
     private
 
     def body_receiver
       @body_receiver ||= [nil, BodyReceiver.new]
+    end
+
+    def set_authorization_header_from_basic_auth!
+      header[:authorization] = url.basic_auth if url.basic_auth?
+    end
+
+    def prepare_body_and_content_type!
+      case body
+      when Query
+        ctype, io = body.to_form
+        self.body = io
+        header[:content_type] ||= ctype
+      when Hash
+        ctype, io = options.build_form(body)
+        self.body = io
+        header[:content_type] ||= ctype
+      else
+        header[:content_type] ||= DEFAULT_TYPE
+      end
+    end
+
+    def content_length_or_chunked_set?
+      header.key?(:content_length) || header[:transfer_encoding] == CHUNKED
+    end
+
+    def set_content_length_or_chunked!
+      if body
+        if sizer = SIZE_METHODS.detect { |method| body.respond_to?(method) }
+          header[:content_length] = body.send(sizer).to_i
+        else
+          header[:transfer_encoding] = CHUNKED
+        end
+      else
+        header[:content_length] = 0
+      end
     end
 
     DEFAULT_TYPE = "application/octet-stream".freeze
