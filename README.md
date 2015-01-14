@@ -311,7 +311,6 @@ client.get("/user").body # => {"id": 1}
 * [ ] Backport Faraday adapters as gems
   * [x] Excon
   * [ ] Typhoeus
-  * [ ] httprb
 * [ ] Integrate into Faraday reliant gems:
   * [ ] [Sawyer](https://github.com/lostisland/sawyer)
   * [ ] [Octokit](https://github.com/octokit/octokit.rb)
