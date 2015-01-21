@@ -41,7 +41,8 @@ module Hurley
     end
 
     def parse_query(raw_query)
-      raw_query.to_s.split(AMP).reject {|pair| pair.empty? }.each do |pair|
+      raw_query.to_s.split(AMP).each do |pair|
+        next if pair.empty?
         escaped_key, escaped_value = pair.split(EQ, 2)
         key = CGI.unescape(escaped_key)
         value = escaped_value ? CGI.unescape(escaped_value) : nil
