@@ -185,5 +185,15 @@ module Hurley
       expected.gsub! /\[|\]/, "[" => "%5B", "]" => "%5D"
       assert_equal expected, actual
     end
+
+    def test_parse_double_equal_sign_in_nested_query
+      q = Query::Nested.parse("a[]=1&b[]=2&&c[]=3")
+      assert_equal %w(a b c), q.keys
+    end
+
+    def test_parse_double_equal_sign_in_flat_query
+      q = Query::Flat.parse("a[]=1&b[]=2&&c[]=3")
+      assert_equal %w(a[] b[] c[]), q.keys
+    end
   end
 end
