@@ -14,7 +14,9 @@ module Hurley
   end
 
   def self.default_client
-    @default_client ||= mutex { Client.new }
+    mutex do
+      @default_client ||= Client.new
+    end
   end
 
   class << self
@@ -31,9 +33,11 @@ module Hurley
   end
 
   def self.default_connection
-    @default_connection ||= mutex do
-      Hurley.require_lib "connection"
-      Connection.new
+    mutex do
+      @default_connection ||= begin
+        Hurley.require_lib "connection"
+        Connection.new
+      end
     end
   end
 
