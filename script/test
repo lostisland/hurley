@@ -17,6 +17,8 @@
 #
 #   # Run against multiple rbenv versions
 #   $ RBENV_VERSIONS="1.9.3-p194 ree-1.8.7-2012.02" script/test
+#   # Run tests with Addressable::URI
+#   $ HURLEY_ADDRESSABLE=1 script/test
 set -e
 
 port=3999
