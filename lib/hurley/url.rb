@@ -152,7 +152,7 @@ module Hurley
     def basic_auth
       return unless @user
       userinfo = @password ? "#{@user}:#{@password}" : @user
-      "Basic #{Base64.encode64(userinfo).rstrip.gsub(/\n/, '')}"
+      "Basic #{Base64.encode64(userinfo).gsub(/\n/, '')}"
     end
 
     def query_class

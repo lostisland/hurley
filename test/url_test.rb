@@ -405,8 +405,7 @@ module Hurley
                     "QX8og3YT%3Fs.%5D8L3h9)@foo.com")
       assert_equal "a b", u.user
       assert_equal "MxYut8Rj8tQi6=wNf.miTxf>q49?,f@vQX8og3YT?s.]8L3h9)", u.password
-      assert_equal "Basic #{Base64.encode64("a b:MxYut8Rj8tQi6=wNf.miTxf>q49?" \
-                                            ",f@vQX8og3YT?s.]8L3h9)").rstrip.gsub(/\n/, '')}", u.basic_auth
+      assert_equal "Basic YSBiOk14WXV0OFJqOHRRaTY9d05mLm1pVHhmPnE0OT8sZkB2UVg4b2czWVQ/cy5dOEwzaDkp", u.basic_auth
     end
 
     def test_basic_auth_user_without_password
