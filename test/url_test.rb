@@ -397,7 +397,7 @@ module Hurley
       u = Url.parse("http://a%20b:1%20%2B%202@foo.com")
       assert_equal "a b", u.user
       assert_equal "1 + 2", u.password
-      assert_equal "Basic #{Base64.encode64("a b:1 + 2").rstrip}", u.basic_auth
+      assert_equal "Basic YSBiOjEgKyAy", u.basic_auth
     end
 
     def test_basic_auth_user_with_non_encoded_password
@@ -412,7 +412,7 @@ module Hurley
       u = Url.parse("http://a%20b@foo.com")
       assert_equal "a b", u.user
       assert_nil u.password
-      assert_equal "Basic #{Base64.encode64("a b").rstrip}", u.basic_auth
+      assert_equal "Basic YSBi", u.basic_auth
     end
 
     def test_join_url_with_auth_url
