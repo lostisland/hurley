@@ -31,13 +31,17 @@ module Hurley
       c = Client.new "https://example.com"
       c.connection = Test.new do |test|
         test.post "/a" do |req|
-          assert_equal "BOOYA", req.body
+          assert_match "BOOYA#<Hurley::Test:", req.body
           [200, {}, "meh"]
         end
       end
 
       c.before_call do |req|
         req.body = req.body.to_s.upcase
+      end
+
+      c.before_call do |req, conn|
+        req.body += conn.inspect
       end
 
       res = c.post "a" do |req|
@@ -494,29 +498,59 @@ module Hurley
     end
 
     def test_sets_before_callbacks
+      cb = Class.new
+      cb.class_eval do
+        def call(r)
+          5
+        end
+
+        def name
+          :fif
+        end
+      end
+
       c = Client.new nil
       c.before_call(:first) { |r| 1 }
       c.before_call { |r| 2 }
       c.before_call NamedCallback.new(:third, lambda { |r| 3 })
+      c.before_call { |r, c| 4 }
+      c.before_call cb.new
 
       callbacks = c.before_callbacks
-      assert_equal 3, callbacks.size
+      assert_equal 5, callbacks.size
       assert_equal :first, callbacks[0]
       assert callbacks[1].start_with?("#<Proc:")
       assert_equal :third, callbacks[2]
+      assert callbacks[3].start_with?("#<Proc:")
+      assert_equal :fif, callbacks[4]
     end
 
     def test_sets_after_callbacks
+      cb = Class.new
+      cb.class_eval do
+        def call(r)
+          5
+        end
+
+        def name
+          :fif
+        end
+      end
+
       c = Client.new nil
       c.after_call(:first) { |r| 1 }
       c.after_call { |r| 2 }
       c.after_call NamedCallback.new(:third, lambda { |r| 3 })
+      c.after_call { |r, c| 2 }
+      c.after_call cb.new
 
       callbacks = c.after_callbacks
-      assert_equal 3, callbacks.size
+      assert_equal 5, callbacks.size
       assert_equal :first, callbacks[0]
       assert callbacks[1].start_with?("#<Proc:")
       assert_equal :third, callbacks[2]
+      assert callbacks[3].start_with?("#<Proc:")
+      assert_equal :fif, callbacks[4]
     end
 
     SUCCESSFUL_RESPONSES = [200, 201, 202, 204, 205, 206]

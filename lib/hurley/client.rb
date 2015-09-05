@@ -97,7 +97,7 @@ module Hurley
 
     def after_call(name_or_callback = nil)
       @after_callbacks << (block_given? ?
-        NamedCallback.for(name_or_callback  , Proc.new) :
+        NamedCallback.for(name_or_callback, Proc.new) :
         NamedCallback.for(nil, name_or_callback))
     end
 
@@ -116,12 +116,12 @@ module Hurley
     private
 
     def call_with_redirects(request, via)
-      @before_callbacks.each { |cb| cb.call(request) }
+      @before_callbacks.each { |cb| cb.call(request, connection) }
 
       request.prepare!
       response = connection.call(request)
 
-      @after_callbacks.each { |cb| cb.call(response) }
+      @after_callbacks.each { |cb| cb.call(response, connection) }
 
       if response.automatically_redirect?(via)
         return call_with_redirects(response.location, via << request)
@@ -348,12 +348,19 @@ module Hurley
     end
   end
 
-  class NamedCallback < Struct.new(:name, :callback)
+  class NamedCallback < Struct.new(:name, :callback, :call_with_connection)
     def self.for(name, callback)
-      if callback.respond_to?(:name) && !name
-        callback
+      call_method = callback.method(:call)
+      call_with_connection = call_method.arity != 1
+      callback_responds_to_name = callback.respond_to?(:name)
+
+      if name || !callback_responds_to_name || !call_with_connection
+        if callback_responds_to_name
+          name ||= callback.name
+        end
+        new(name, callback, call_with_connection)
       else
-        new(name, callback)
+        callback
       end
     end
 
@@ -361,8 +368,12 @@ module Hurley
       self[:name] ||= callback.inspect
     end
 
-    def call(arg)
-      callback.call(arg)
+    def call(arg, connection)
+      if call_with_connection
+        callback.call(arg, connection)
+      else
+        callback.call(arg)
+      end
     end
   end
 end
