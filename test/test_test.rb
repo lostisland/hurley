@@ -9,7 +9,7 @@ module Hurley
           [403, {}, ""]
         end
 
-        stub.get("/a", expires: false) do |req|
+        stub.get("/a", :expires => false) do |req|
           output = %w(fee fi fo fum)
           [200, {"Content-Length" => "13"}, output.join("\n")]
         end
@@ -19,7 +19,7 @@ module Hurley
           [200, {"Content-Length" => "4"}, "last"]
         end
 
-        stub.get("/expires", expires: true) do |req|
+        stub.get("/expires", :expires => true) do |req|
           [200, {}, "last"]
         end
 

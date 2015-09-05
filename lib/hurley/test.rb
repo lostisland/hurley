@@ -6,42 +6,43 @@ module Hurley
       yield self if block_given?
     end
 
-    def get(url, expires: nil)
-      handle(:get, url, expires: expires, &Proc.new)
+    def get(url, options = nil)
+      handle(:get, url, options, &Proc.new)
     end
 
     alias head get
 
-    def put(url, expires: nil)
-      handle(:put, url, expires: expires, &Proc.new)
+    def put(url, options = nil)
+      handle(:put, url, options, &Proc.new)
     end
 
-    def post(url, expires: nil)
-      handle(:post, url, expires: expires, &Proc.new)
+    def post(url, options = nil)
+      handle(:post, url, options, &Proc.new)
     end
 
-    def patch(url, expires: nil)
-      handle(:patch, url, expires: expires, &Proc.new)
+    def patch(url, options = nil)
+      handle(:patch, url, options, &Proc.new)
     end
 
-    def delete(url, expires: nil)
-      handle(:delete, url, expires: expires, &Proc.new)
+    def delete(url, options = nil)
+      handle(:delete, url, options, &Proc.new)
     end
 
-    def options(url, expires: nil)
-      handle(:options, url, expires: expires, &Proc.new)
+    def options(url, options = nil)
+      handle(:options, url, options, &Proc.new)
     end
 
-    def handle(verb, url, expires: nil)
+    def handle(verb, url, options = nil)
       # treat HEAD responses like GET
       req_verb = verb == :head ? :get : verb
       vu = [req_verb, url]
 
       if existing = @handlers_by_verb_and_url[vu]
-        expires = existing.expires = true
+        existing.expires = true
+        (options ||= {}).update(:expires => true)
       end
 
-      h = Handler.new(Request.new(req_verb, Url.parse(url)), Proc.new, expires: expires)
+      h = Handler.new(Request.new(req_verb, Url.parse(url)), Proc.new, options)
       @handlers_by_verb_and_url[vu] ||= h
       @handlers << h
     end
@@ -69,11 +70,11 @@ module Hurley
         end
       end
 
-      def initialize(request, callback, expires: nil)
+      def initialize(request, callback, options = nil)
         @run = false
         @request = request
         @callback = callback
-        @expires = expires ? true : false
+        @expires = (options && options[:expires]) ? true : false
         @path_regex = %r{\A#{@request.url.path}(/|\z)}
       end
 
