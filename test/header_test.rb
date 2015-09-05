@@ -22,7 +22,7 @@ module Hurley
       end
 
       assert_equal 200, res.status_code
-      assert_equal "User-Agent:Hurley v0.1\nClient:1\nOverride:2\nRequest:2", res.body
+      assert_equal "User-Agent:Hurley v#{Hurley::VERSION}\nClient:1\nOverride:2\nRequest:2", res.body
     end
 
     def test_empty_initial
