@@ -2,7 +2,7 @@ require "forwardable"
 require "thread"
 
 module Hurley
-  VERSION = "0.1".freeze
+  VERSION = "0.2".freeze
   USER_AGENT = "Hurley v#{VERSION}".freeze
   LIB_PATH = __FILE__[0...-3]
   MUTEX = Mutex.new
