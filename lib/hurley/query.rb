@@ -8,6 +8,10 @@ module Hurley
       @default ||= Nested
     end
 
+    def self.default=(klass)
+      @default = klass
+    end
+
     def self.parse(raw_query)
       default.parse(raw_query)
     end
