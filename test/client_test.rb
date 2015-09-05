@@ -52,6 +52,39 @@ module Hurley
       assert c.connection.all_run?
     end
 
+    def test_integration_before_callback_early_return
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |test|
+        test.get "/a" do |req|
+          [500, {}, req.body]
+        end
+      end
+
+      c.before_call do |req|
+        req.body = req.url.path
+      end
+
+      c.before_call do |req, connection|
+        req.body += " #{connection.class}"
+        req.prepare!
+        Response.new(req, 201) do |res|
+          res.body = req.body
+        end
+      end
+
+      c.before_call do |req|
+        req.body = "this should be skipped by callback 2"
+      end
+
+      c.after_call do |res|
+        res.body = res.body.to_s.downcase
+      end
+
+      res = c.get("/a")
+      assert_equal 201, res.status_code, res.body
+      assert_equal "/a hurley::test", res.body
+    end
+
     def test_integration_after_callback
       c = Client.new "https://example.com"
       c.connection = Test.new do |test|

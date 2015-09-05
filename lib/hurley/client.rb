@@ -116,10 +116,10 @@ module Hurley
     private
 
     def call_with_redirects(request, via)
-      @before_callbacks.each { |cb| cb.call(request, connection) }
-
-      request.prepare!
-      response = connection.call(request)
+      response = process_before_callbacks(request) || begin
+        request.prepare!
+        connection.call(request)
+      end
 
       @after_callbacks.each { |cb| cb.call(response, connection) }
 
@@ -129,6 +129,15 @@ module Hurley
 
       response.via = via
       response
+    end
+
+    def process_before_callbacks(request)
+      @before_callbacks.each do |cb|
+        res = cb.call(request, connection)
+        return res if res.is_a?(Response)
+      end
+
+      nil
     end
   end
 
