@@ -176,6 +176,15 @@ module Hurley
       @body_receiver = [statuses.empty? ? nil : statuses, Proc.new]
     end
 
+    # response prepares this Request and builds a Response with it. This should
+    # only be called in 'before' callbacks that return a Response to bypass the
+    # connection. Connections are called with Request objects prepared by
+    # Hurley::Client#call_with_redirects, and do not need to use this.
+    def response(status_code = nil, header = nil)
+      prepare!
+      Response.new(self, status_code, header, &Proc.new)
+    end
+
     def inspect
       "#<%s %s %s>" % [
         self.class.name,
@@ -184,6 +193,8 @@ module Hurley
       ]
     end
 
+    # prepare! sets some common header and body values. You likely do not need
+    # to call this.
     def prepare!
       prepare_basic_auth!
 

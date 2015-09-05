@@ -66,8 +66,7 @@ module Hurley
 
       c.before_call do |req, connection|
         req.body += " #{connection.class}"
-        req.prepare!
-        Response.new(req, 201) do |res|
+        req.response 201 do |res|
           res.body = req.body
         end
       end
