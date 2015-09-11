@@ -172,6 +172,40 @@ module Hurley
           assert_nil res.body
         end
 
+        def test_streaming
+          chunks = []
+
+          res = client.get("echo") do |req|
+            req.on_body { |_, c| chunks << c }
+          end
+
+          assert_equal 200, res.status_code
+          assert_equal %(get), chunks.join
+        end
+
+        def test_streaming_status_code
+          chunks = []
+
+          res = client.get("echo") do |req|
+            req.on_body(200) { |_, c| chunks << c }
+          end
+
+          assert_equal 200, res.status_code
+          assert_equal %(get), chunks.join
+        end
+
+        def test_streaming_different_status_code
+          chunks = []
+
+          res = client.get("echo") do |req|
+            req.on_body(400) { |_, c| chunks << c }
+          end
+
+          assert_equal 200, res.status_code
+          assert_equal [], chunks
+          assert_equal %(get), res.body
+        end
+
         def test_proxy
           return unless client.request_options.proxy = proxy_url
 
