@@ -2,43 +2,53 @@ module Hurley
   class Test
     def initialize
       @handlers = []
+      @handlers_by_verb_and_url = {}
       yield self if block_given?
     end
 
-    def head(url)
-      handle(:head, url, &Proc.new)
+    def get(url, options = nil)
+      handle(:get, url, options, &Proc.new)
     end
 
-    def get(url)
-      handle(:get, url, &Proc.new)
+    alias head get
+
+    def put(url, options = nil)
+      handle(:put, url, options, &Proc.new)
     end
 
-    def put(url)
-      handle(:put, url, &Proc.new)
+    def post(url, options = nil)
+      handle(:post, url, options, &Proc.new)
     end
 
-    def post(url)
-      handle(:post, url, &Proc.new)
+    def patch(url, options = nil)
+      handle(:patch, url, options, &Proc.new)
     end
 
-    def patch(url)
-      handle(:patch, url, &Proc.new)
+    def delete(url, options = nil)
+      handle(:delete, url, options, &Proc.new)
     end
 
-    def delete(url)
-      handle(:delete, url, &Proc.new)
+    def options(url, options = nil)
+      handle(:options, url, options, &Proc.new)
     end
 
-    def options(url)
-      handle(:options, url, &Proc.new)
-    end
+    def handle(verb, url, options = nil)
+      # treat HEAD responses like GET
+      req_verb = verb == :head ? :get : verb
+      vu = [req_verb, url]
 
-    def handle(verb, url)
-      @handlers << Handler.new(Request.new(verb, Url.parse(url)), Proc.new)
+      if existing = @handlers_by_verb_and_url[vu]
+        existing.expires = true
+        (options ||= {}).update(:expires => true)
+      end
+
+      h = Handler.new(Request.new(req_verb, Url.parse(url)), Proc.new, options)
+      @handlers_by_verb_and_url[vu] ||= h
+      @handlers << h
     end
 
     def call(request)
-      handler = @handlers.detect { |h| h.matches?(request) } ||
+      handler = @handlers.detect { |h| !h.expired? && h.matches?(request) } ||
         Handler.method(:not_found)
       # Create a new url with fresh state from the url string
       request.url = Url.parse(request.url.to_s)
@@ -52,6 +62,7 @@ module Hurley
     class Handler
       attr_reader :request
       attr_reader :callback
+      attr_writer :expires
 
       def self.not_found(request)
         Response.new(request, 404, Header.new) do |res|
@@ -59,9 +70,11 @@ module Hurley
         end
       end
 
-      def initialize(request, callback)
+      def initialize(request, callback, options = nil)
+        @run = false
         @request = request
         @callback = callback
+        @expires = (options && options[:expires]) ? true : false
         @path_regex = %r{\A#{@request.url.path}(/|\z)}
       end
 
@@ -69,6 +82,7 @@ module Hurley
         @run = true
         status, header, body = @callback.call(request)
         Response.new(request, status, Header.new(header)) do |res|
+          next if request.verb == :head
           Array(body).each do |chunk|
             res.receive_body(chunk)
           end
@@ -76,7 +90,8 @@ module Hurley
       end
 
       def matches?(request)
-        return false unless @request.verb == request.verb
+        verb_to_match = request.verb == :head ? :get : request.verb
+        return false unless verb_to_match == @request.verb
 
         handler_url = @request.url
         request_url = request.url
@@ -92,6 +107,14 @@ module Hurley
 
       def run?
         !!@run
+      end
+
+      def expires?
+        @expires
+      end
+
+      def expired?
+        @expires && run?
       end
 
       EMPTY_OR_SLASH = %r{\A/?\z}

@@ -3,7 +3,7 @@ require File.expand_path("../helper", __FILE__)
 module Hurley
   class ClientTest < TestCase
     def test_integration_verbs
-      verbs = [:head, :get, :put, :post, :delete, :options]
+      verbs = [:get, :put, :post, :delete, :options]
       client = Client.new "https://example.com"
       client.connection = Test.new do |t|
         verbs.each do |verb|
@@ -25,6 +25,25 @@ module Hurley
       if errors.any?
         fail "\n" + errors.join("\n")
       end
+    end
+
+    def test_head_verb
+      client = Client.new "https://example.com"
+      client.connection = Test.new do |t|
+        t.head("/a") do |req|
+          [200, {"Content-Length" => "4"}, "head"]
+        end
+      end
+
+      res = client.head("/a")
+      assert_equal 200, res.status_code
+      assert_equal "4", res.header[:content_length]
+      assert_nil res.body
+
+      res = client.get("/a")
+      assert_equal 200, res.status_code
+      assert_equal "4", res.header[:content_length]
+      assert_equal "head", res.body
     end
 
     def test_integration_before_callback
