@@ -211,9 +211,15 @@ module Hurley
       end
 
       module Compression
-        def test_GET_handles_compression
+        def test_GET_sends_accept_encoding
           res = client.get("echo_header", :name => :accept_encoding)
+          # ruby 1.9: gzip;q=1.0,deflate;q=0.6,identity;q=0.3
           assert_match(/gzip;.+\bdeflate\b/, res.body)
+        end
+
+        def test_get_gzip_encoded_body
+          res = client.get("encode_gzip")
+          assert_equal "Hurley:gzip", res.body
         end
       end
 

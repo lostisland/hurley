@@ -1,4 +1,5 @@
 require "sinatra/base"
+require "zlib"
 
 module Hurley
   module Live
@@ -27,6 +28,11 @@ module Hurley
       get "/echo_header" do
         header = "HTTP_#{params[:name].tr("-", "_").upcase}"
         request.env.fetch(header) { "NONE" }
+      end
+
+      get "/encode_gzip" do
+        headers["Content-Encoding"] = "gzip"
+        Zlib::Deflate.deflate("Hurley:gzip")
       end
 
       post "/file" do

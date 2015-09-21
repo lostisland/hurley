@@ -8,6 +8,9 @@ require "zlib"
 
 module Hurley
   class Connection
+    # https://bugs.ruby-lang.org/issues/9467
+    ATTEMPT_GZIP = RUBY_VERSION !~ /\A1\.9(\.|\z)/
+
     def call(request)
       net_http_connection(request) do |http|
         begin
@@ -75,7 +78,7 @@ module Hurley
     end
 
     def perform_request(http, request, res)
-      if :get == request.verb
+      if ATTEMPT_GZIP && :get == request.verb
         # prefer `get` to `request` because the former handles gzip (ruby 1.9)
         http_res = http.get(request.url.request_uri, request.header.to_hash) do |chunk|
           res.receive_body(chunk)

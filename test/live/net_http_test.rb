@@ -1,10 +1,14 @@
 require File.expand_path("../../helper", __FILE__)
+Hurley.require_lib "connection"
 
 module Hurley
   module Live
     class NetHttpTest < TestCase
       features = []
-      features << :Compression if RUBY_VERSION >= "1.9"
+
+      if Hurley::Connection::ATTEMPT_GZIP && RUBY_VERSION >= "1.9"
+        features << :Compression
+      end
 
       Hurley::Test::Integration.apply(self, *features)
 
