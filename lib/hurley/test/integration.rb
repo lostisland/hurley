@@ -138,7 +138,7 @@ module Hurley
         end
 
         def test_HEAD_retrieves_no_response_body
-          assert_nil client.head("echo").body
+          assert_equal '', client.head("echo").body
         end
 
         def test_HEAD_retrieves_the_response_headers
@@ -166,10 +166,41 @@ module Hurley
           end
         end
 
-        def test_empty_body_response_represented_as_nil
+        def test_empty_body_response_represented_as_empty
           res = client.get("204")
           assert_equal 204, res.status_code
-          assert_nil res.body
+          assert_equal '', res.body
+        end
+
+        def test_streaming
+          chunks = []
+
+          res = client.get("echo")
+          res.stream_body { |_, c| chunks << c }
+
+          assert_equal 200, res.status_code
+          assert_equal %(get), chunks.join
+        end
+
+        def test_streaming_status_code
+          chunks = []
+
+          res = client.get("echo")
+          res.stream_body(200) { |_, c| chunks << c }
+
+          assert_equal 200, res.status_code
+          assert_equal %(get), chunks.join
+        end
+
+        def test_streaming_different_status_code
+          chunks = []
+
+          res = client.get("echo")
+          res.stream_body(400) { |_, c| chunks << c }
+
+          assert_equal 200, res.status_code
+          assert_equal [], chunks
+          assert_equal %(get), res.body
         end
 
         def test_proxy
