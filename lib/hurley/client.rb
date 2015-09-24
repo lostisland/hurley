@@ -229,8 +229,8 @@ module Hurley
   class Response
     attr_reader :request
     attr_reader :header
-    attr_accessor :body
     attr_reader :status_code
+    attr_writer :body
     attr_writer :via
 
     def initialize(request, status_code = nil, header = nil)
@@ -242,6 +242,7 @@ module Hurley
       @body = nil
       @receiver = BodyReceiver.new
       @body_receiver = [nil, @receiver]
+
       if block_given?
         yield self
         complete!
@@ -250,9 +251,13 @@ module Hurley
 
     def complete!
       @ended_at = Time.now.to_f
+    end
 
-      if @receiver.respond_to?(:join)
-        @body = @receiver.join
+    def body
+      if @body
+        @body
+      elsif @receiver.respond_to?(:join)
+        @receiver.join
       end
     end
 
