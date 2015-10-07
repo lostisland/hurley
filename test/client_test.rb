@@ -479,6 +479,31 @@ module Hurley
         assert_equal "https://example.com/2", res.request.url.to_s
     end
 
+    def test_integration_on_body_redirects
+      c = Client.new "https://example.com"
+      c.connection = Test.new do |t|
+        1.upto(5) do |i|
+          t.get "/#{i}" do |req|
+            [301, {"Location" => "/#{i - 1}"}, i.to_s]
+          end
+        end
+
+        t.get "/0" do |req|
+          [200, {}, "ok"]
+        end
+      end
+
+      body = []
+      res = c.get("/5") do |r|
+        r.options.redirection_limit = 10
+        r.on_body(200) do |res, chunk|
+          body << chunk
+        end
+      end
+
+      assert_equal "ok", body.join
+    end
+
     def test_parses_endpoint
       c = Client.new "https://example.com/a?a=1"
       assert_equal "https", c.scheme
