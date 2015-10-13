@@ -10,7 +10,7 @@ namespace :hurley do
     Hurley::Live.start_server(
       :port => (ENV["HURLEY_PORT"] || 4000).to_i,
       :ssl_key => ENV["HURLEY_SSL_KEY"],
-      :ssl_file => ENV["HURLEY_SSL_FILE"],
+      :ssl_file => ENV["HURLEY_SSL_FILE"]
     )
   end
 
