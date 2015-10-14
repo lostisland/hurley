@@ -10,6 +10,7 @@ contributors = YAML.load(IO.read(File.expand_path("../contributors.yaml", __FILE
 Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.0"
   spec.add_development_dependency "sinatra", "~> 1.4"
+  spec.add_development_dependency "minitest", "~> 5.8"
   spec.authors = contributors.keys.compact
   spec.description = %q{Hurley provides a common interface for working with different HTTP adapters.}
   spec.email = contributors.values.compact
