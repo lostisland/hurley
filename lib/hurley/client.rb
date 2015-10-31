@@ -269,7 +269,10 @@ module Hurley
       @location ||= begin
         return unless loc = @header[:location]
         verb = STATUS_FORCE_GET.include?(status_code) ? :get : request.verb
-        Request.new(verb, request.url.join(Url.parse(loc)), request.header, request.body, request.options, request.ssl_options)
+        statuses, receiver = request.send(:body_receiver)
+        new_request = Request.new(verb, request.url.join(Url.parse(loc)), request.header, request.body, request.options, request.ssl_options)
+        new_request.on_body(*statuses, &receiver) unless receiver.is_a?(Hurley::BodyReceiver)
+        new_request
       end
     end
 
