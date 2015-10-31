@@ -15,11 +15,7 @@ module Hurley
       net_http_connection(request) do |http|
         begin
           Response.new(request) do |res|
-            http_res = perform_request(http, request, res)
-            res.status_code = http_res.code.to_i
-            http_res.each_header do |key, value|
-              res.header[key] = value
-            end
+            perform_request(http, request, res)
 
             # net/http only raises exception on 407 with ssl...?
             if res.status_code == 407
@@ -78,16 +74,18 @@ module Hurley
     end
 
     def perform_request(http, request, res)
-      if ATTEMPT_GZIP && :get == request.verb
-        # prefer `get` to `request` because the former handles gzip (ruby 1.9)
-        http_res = http.get(request.url.request_uri, request.header.to_hash) do |chunk|
-          res.receive_body(chunk)
+      http.request(net_http_request(request)) do |http_res|
+        res.status_code = http_res.code.to_i
+
+        http_res.each_header do |key, value|
+          res.header[key] = value
         end
-        http_res
-      else
-        http_res = http.request(net_http_request(request))
-        res.receive_body(http_res.body)
-        http_res
+
+        if :get == request.verb
+          http_res.read_body { |chunk| res.receive_body(chunk) }
+        else
+          res.receive_body(http_res.body)
+        end
       end
     end
 
