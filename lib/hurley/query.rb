@@ -179,7 +179,7 @@ module Hurley
 
     class Pair < Struct.new(:key, :escaped_key, :value)
       def to_s
-        if value
+        if !value.nil?
           "#{escaped_key}=#{Url.escape_path(value)}"
         else
           escaped_key
