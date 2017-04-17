@@ -163,10 +163,6 @@ module Hurley
       end
     end
 
-    def on_body(*statuses)
-      @body_receiver = [statuses.empty? ? nil : statuses, Proc.new]
-    end
-
     def inspect
       "#<%s %s %s>" % [
         self.class.name,
@@ -223,9 +219,6 @@ module Hurley
       end
     end
 
-    def body_receiver
-      @body_receiver ||= [nil, BodyReceiver.new]
-    end
 
     DEFAULT_TYPE = "application/octet-stream".freeze
     CHUNKED = "chunked".freeze
@@ -236,18 +229,20 @@ module Hurley
   class Response
     attr_reader :request
     attr_reader :header
-    attr_accessor :body
-    attr_accessor :status_code
+    attr_reader :status_code
+    attr_writer :body
     attr_writer :via
 
     def initialize(request, status_code = nil, header = nil)
       @request = request
       @status_code = status_code
       @header = header || Header.new
-      @body = nil
-      @receiver = nil
       @timing = nil
       @started_at = Time.now.to_f
+      @body = nil
+      @receiver = BodyReceiver.new
+      @body_receiver = [nil, @receiver]
+
       if block_given?
         yield self
         complete!
@@ -256,8 +251,13 @@ module Hurley
 
     def complete!
       @ended_at = Time.now.to_f
-      if @receiver.respond_to?(:join)
-        @body = @receiver.join
+    end
+
+    def body
+      if @body
+        @body
+      elsif @receiver.respond_to?(:join)
+        @receiver.join
       end
     end
 
@@ -302,19 +302,18 @@ module Hurley
       limit > 0 && Array(previous_requests).size < limit
     end
 
+    def stream_body(*statuses)
+      @body_receiver = [statuses.empty? ? nil : statuses, Proc.new]
+      set_receiver if @status_code
+    end
+
     def receive_body(chunk)
-      return if chunk.nil?
-
-      if @receiver.nil?
-        statuses, receiver = request.send(:body_receiver)
-        @receiver = if statuses && !statuses.include?(@status_code)
-          BodyReceiver.new
-        else
-          receiver
-        end
-      end
-
       @receiver.call(self, chunk)
+    end
+
+    def status_code=(status_code)
+      @status_code = status_code
+      set_receiver
     end
 
     def ms
@@ -330,6 +329,20 @@ module Hurley
         @body ? " (#{@body.bytesize} bytes)" : nil,
         ms,
       ]
+    end
+
+    private
+
+    def set_receiver
+      statuses, receiver = @body_receiver
+
+      if @receiver != receiver && (!statuses || statuses.include?(@status_code))
+        if @receiver.respond_to?(:join)
+          receiver.call(self, @receiver.join)
+        end
+
+        @receiver = receiver
+      end
     end
 
     STATUS_TYPES = [:success, :redirection, :client_error, :server_error]

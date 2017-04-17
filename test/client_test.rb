@@ -38,7 +38,7 @@ module Hurley
       res = client.head("/a")
       assert_equal 200, res.status_code
       assert_equal "4", res.header[:content_length]
-      assert_nil res.body
+      assert_equal '', res.body
 
       res = client.get("/a")
       assert_equal 200, res.status_code
